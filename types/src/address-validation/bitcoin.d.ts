@@ -1,4 +1,9 @@
 /**
+ * @typedef {{ success: true, type: 'p2pkh' | 'p2sh' | 'bech32' }} BtcAddressValidationSuccess
+ * @typedef {{ success: false, reason: string }} BtcAddressValidationFailure
+ * @typedef {BtcAddressValidationSuccess | BtcAddressValidationFailure} BtcAddressValidationResult
+ */
+/**
  * Validates a P2PKH address.
  * Assumes the address starts with '1'.
  * @param {string} address The address to validate.
