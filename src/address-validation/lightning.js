@@ -76,12 +76,6 @@ export function validateLightningInvoice (address) {
 }
 
 /**
- * @typedef {{ success: true, type: 'address' }} LightningAddressValidationSuccess
- * @typedef {{ success: false, reason: string }} LightningAddressValidationFailure
- * @typedef {LightningAddressValidationSuccess | LightningAddressValidationFailure} LightningAddressValidationResult
- */
-
-/**
  * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
  * @typedef {{ success: false, reason: string }} LnurlValidationFailure
  * @typedef {LnurlValidationSuccess | LnurlValidationFailure} LnurlValidationResult
@@ -98,17 +92,24 @@ export function validateLnurl (address) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
   const lower = address.trim().toLowerCase()
+  if (!lower) {
+    return { success: false, reason: 'INVALID_FORMAT' }
+  }
   if (!lower.startsWith('lnurl1')) {
     return { success: false, reason: 'INVALID_PREFIX' }
   }
   try {
-    const decoded = bech32.decode(lower, 2000)
-    if (decoded.prefix === 'lnurl') {
-      return { success: true, type: 'lnurl' }
-    }
+    bech32.decode(lower, 2000)
+    return { success: true, type: 'lnurl' }
   } catch {}
   return { success: false, reason: 'INVALID_BECH32_FORMAT' }
 }
+
+/**
+ * @typedef {{ success: true, type: 'address' }} LightningAddressValidationSuccess
+ * @typedef {{ success: false, reason: string }} LightningAddressValidationFailure
+ * @typedef {LightningAddressValidationSuccess | LightningAddressValidationFailure} LightningAddressValidationResult
+ */
 
 /**
  * Validates Lightning Address format (email: user@domain.tld).

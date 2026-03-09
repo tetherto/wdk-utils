@@ -30,9 +30,12 @@ describe('spark', () => {
     it('returns INVALID_FORMAT for invalid address with special chars', () => {
       expect(validateSparkAddress('bad!')).toEqual({ success: false, reason: 'INVALID_FORMAT' });
     });
-    it('returns INVALID_FORMAT or EMPTY_ADDRESS for empty or non-string', () => {
+    it('returns INVALID_FORMAT for empty or non-string', () => {
       expect(validateSparkAddress('')).toEqual({ success: false, reason: 'INVALID_FORMAT' });
       expect(validateSparkAddress(null)).toEqual({ success: false, reason: 'INVALID_FORMAT' });
+    });
+    it('returns EMPTY_ADDRESS for whitespace-only string', () => {
+      expect(validateSparkAddress('   ')).toEqual({ success: false, reason: 'EMPTY_ADDRESS' });
     });
   });
 });

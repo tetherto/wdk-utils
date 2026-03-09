@@ -69,6 +69,9 @@ describe('lightning', () => {
       expect(validateLnurl('')).toEqual({ success: false, reason: 'INVALID_FORMAT' });
       expect(validateLnurl(null)).toEqual({ success: false, reason: 'INVALID_FORMAT' });
     });
+    it('returns INVALID_FORMAT for whitespace-only string', () => {
+      expect(validateLnurl('   ')).toEqual({ success: false, reason: 'INVALID_FORMAT' });
+    });
   });
 
   describe('validateLightningAddress', () => {
