@@ -82,6 +82,35 @@ export function validateLightningInvoice (address) {
  */
 
 /**
+ * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
+ * @typedef {{ success: false, reason: string }} LnurlValidationFailure
+ * @typedef {LnurlValidationSuccess | LnurlValidationFailure} LnurlValidationResult
+ */
+
+/**
+ * Validates an LNURL address (lnurl1... bech32 encoded URL).
+ *
+ * @param {string} address The LNURL to validate.
+ * @returns {LnurlValidationResult}
+ */
+export function validateLnurl (address) {
+  if (!address || typeof address !== 'string') {
+    return { success: false, reason: 'INVALID_FORMAT' }
+  }
+  const lower = address.trim().toLowerCase()
+  if (!lower.startsWith('lnurl1')) {
+    return { success: false, reason: 'INVALID_PREFIX' }
+  }
+  try {
+    const decoded = bech32.decode(lower, 2000)
+    if (decoded.prefix === 'lnurl') {
+      return { success: true, type: 'lnurl' }
+    }
+  } catch {}
+  return { success: false, reason: 'INVALID_BECH32_FORMAT' }
+}
+
+/**
  * Validates Lightning Address format (email: user@domain.tld).
  *
  * @param {string} address The address to validate.

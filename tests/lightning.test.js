@@ -1,6 +1,7 @@
 import {
   validateLightningInvoice,
   validateLightningAddress,
+  validateLnurl,
   stripLightningPrefix,
 } from '../src/address-validation/lightning.js';
 
@@ -47,6 +48,26 @@ describe('lightning', () => {
     });
     it('strips lightning: before validating', () => {
       expect(validateLightningInvoice('lightning:' + validLnbc)).toEqual({ success: true, type: 'invoice' });
+    });
+  });
+
+  describe('validateLnurl', () => {
+    const validLnurl = 'LNURL1DP68GURN8GHJ7AMPD3KX2AR0VEEKZAR0WD5XJTNRDAKJ7TNHV4KXCTTTDEHHWM30D3H82UNVWQHHXETKV4EXZMR2DAEK2URG8YUSEYT8HL';
+    it('returns success with type lnurl for valid LNURL (uppercase)', () => {
+      expect(validateLnurl(validLnurl)).toEqual({ success: true, type: 'lnurl' });
+    });
+    it('returns success with type lnurl for valid LNURL (lowercase)', () => {
+      expect(validateLnurl(validLnurl.toLowerCase())).toEqual({ success: true, type: 'lnurl' });
+    });
+    it('returns INVALID_BECH32_FORMAT for lnurl1 with invalid checksum', () => {
+      expect(validateLnurl('lnurl1' + 'a'.repeat(20))).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' });
+    });
+    it('returns INVALID_PREFIX for non-lnurl address', () => {
+      expect(validateLnurl('lnbc1xxx')).toEqual({ success: false, reason: 'INVALID_PREFIX' });
+    });
+    it('returns INVALID_FORMAT for empty or non-string', () => {
+      expect(validateLnurl('')).toEqual({ success: false, reason: 'INVALID_FORMAT' });
+      expect(validateLnurl(null)).toEqual({ success: false, reason: 'INVALID_FORMAT' });
     });
   });
 

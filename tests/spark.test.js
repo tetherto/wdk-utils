@@ -1,12 +1,18 @@
 import { validateSparkAddress } from '../src/address-validation/spark.js';
 
 describe('spark', () => {
-  const validBtc = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+  const validSpark = 'spark1pgss8nf2kuw484d2u529edwjq4et7wqa7pj4pqdw0axprejy38reqeq0lxclux';
   const validAlphanumeric = 'a'.repeat(25);
 
   describe('validateSparkAddress', () => {
-    it('returns success with type btc for Bitcoin address', () => {
-      expect(validateSparkAddress(validBtc)).toEqual({ success: true, type: 'btc' });
+    it('returns success with type spark for spark1 bech32 address', () => {
+      expect(validateSparkAddress(validSpark)).toEqual({ success: true, type: 'spark' });
+    });
+    it('returns INVALID_BECH32_FORMAT for spark1 prefix with invalid checksum', () => {
+      expect(validateSparkAddress('spark1' + 'a'.repeat(20))).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' });
+    });
+    it('returns MIXED_CASE for mixed case spark1 address', () => {
+      expect(validateSparkAddress('Spark1pgss8nf2kuw484d2u529edwjq4et7wqa7pj4pqdw0axprejy38reqeq0lxclux')).toEqual({ success: false, reason: 'MIXED_CASE' });
     });
     it('returns success with type alphanumeric for 20-100 char alphanumeric', () => {
       expect(validateSparkAddress(validAlphanumeric)).toEqual({ success: true, type: 'alphanumeric' });

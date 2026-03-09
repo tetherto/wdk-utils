@@ -15,20 +15,20 @@
 
 /**
  * Spark address validation.
- * Accepts: Bitcoin-like address OR alphanumeric string 20-100 chars.
+ * Accepts: Spark bech32 address (spark1...) OR alphanumeric string 20-100 chars.
  */
 
-import { validateBitcoinAddress } from './bitcoin.js'
+import { bech32m } from '@scure/base'
 
 /**
- * @typedef {{ success: true, type: 'btc' | 'alphanumeric' }} SparkAddressValidationSuccess
+ * @typedef {{ success: true, type: 'spark' | 'alphanumeric' }} SparkAddressValidationSuccess
  * @typedef {{ success: false, reason: string }} SparkAddressValidationFailure
  * @typedef {SparkAddressValidationSuccess | SparkAddressValidationFailure} SparkAddressValidationResult
  */
 
 /**
  * Validates a Spark address.
- * Accepts Bitcoin format or alphanumeric string (20-100 chars).
+ * Accepts Spark bech32 format (spark1...) or alphanumeric string (20-100 chars).
  *
  * @param {string} address The address to validate.
  * @returns {SparkAddressValidationResult}
@@ -41,10 +41,20 @@ export function validateSparkAddress (address) {
   if (trimmed.length === 0) {
     return { success: false, reason: 'EMPTY_ADDRESS' }
   }
-  if (validateBitcoinAddress(trimmed).success) {
-    return { success: true, type: 'btc' }
+  const lower = trimmed.toLowerCase()
+  if (lower.startsWith('spark1')) {
+    if (trimmed !== lower) {
+      return { success: false, reason: 'MIXED_CASE' }
+    }
+    try {
+      const decoded = bech32m.decode(lower)
+      if (decoded.prefix === 'spark') {
+        return { success: true, type: 'spark' }
+      }
+    } catch {}
+    return { success: false, reason: 'INVALID_BECH32_FORMAT' }
   }
-  if (trimmed.length >= 20 && trimmed.length <= 100 && /^[a-zA-Z0-9]+$/.test(trimmed)) {
+  if (/^[a-zA-Z0-9]{20,100}$/.test(trimmed)) {
     return { success: true, type: 'alphanumeric' }
   }
   return { success: false, reason: 'INVALID_FORMAT' }
