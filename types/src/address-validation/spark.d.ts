@@ -1,6 +1,7 @@
 /**
  * Validates a Spark address.
- * Accepts Bitcoin format or alphanumeric string (20-100 chars).
+ * A Spark address can be a native Bech32m encoded address or a standard
+ * Bitcoin address for L1 deposits.
  *
  * @param {string} address The address to validate.
  * @returns {SparkAddressValidationResult}
@@ -8,7 +9,7 @@
 export function validateSparkAddress(address: string): SparkAddressValidationResult;
 export type SparkAddressValidationSuccess = {
     success: true;
-    type: "btc" | "alphanumeric";
+    type: "spark" | "btc";
 };
 export type SparkAddressValidationFailure = {
     success: false;
