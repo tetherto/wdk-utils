@@ -82,7 +82,7 @@ function _decodeBase58(address) {
  * @param {Uint8Array} decoded - The decoded address
  * @returns {BtcAddressValidationResult}
  */
-export function _validateP2PKH (decoded) {
+function _validateP2PKH (decoded) {
   const version = decoded[0]
   if (version === NETWORKS.mainnet.p2pkh) {
     return { success: true, type: 'p2pkh', network: 'mainnet' }
@@ -225,15 +225,11 @@ export function validateBitcoinAddress (address) {
   }
 
   if (successes.length > 1) {
-    // This case should be impossible due to address format designs
     return { success: false, reason: 'AMBIGUOUS_ADDRESS' }
   }
 
-  // If we reach here, all validators failed. We must choose the best error.
   const failures = results
 
-  // A definitive failure is any reason other than a generic format mismatch.
-  // This indicates the address resembled a type but was structurally flawed.
   const definitiveFailure = failures.find(f =>
     f.reason !== 'INVALID_FORMAT' &&
     f.reason !== 'INVALID_BECH32_FORMAT' &&
@@ -244,6 +240,5 @@ export function validateBitcoinAddress (address) {
     return definitiveFailure
   }
 
-  // If all we have are format failures, return a generic one.
   return { success: false, reason: 'INVALID_FORMAT' }
 }

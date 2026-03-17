@@ -1,35 +1,32 @@
+export function validateBase58(address: any): BtcAddressValidationSuccess | {
+    decoded: Uint8Array;
+} | {
+    success: boolean;
+    reason: string;
+};
 /**
- * Validates a P2PKH address.
- * Assumes the address starts with '1'.
- * @param {string} address The address to validate.
- * @returns {BtcAddressValidationResult}
- */
-export function validateP2PKH(address: string): BtcAddressValidationResult;
-/**
- * Validates a P2SH address.
- * Assumes the address starts with '3'.
- * @param {string} address The address to validate.
- * @returns {BtcAddressValidationResult}
- */
-export function validateP2SH(address: string): BtcAddressValidationResult;
-/**
- * Validates a Bech32 or Bech32m address.
- * Assumes the address starts with 'bc1' (case-insensitive).
- * @param {string} address The address to validate.
+ * Validates a Bech32 address for any supported network.
+ * @param {string} address - The address to validate.
  * @returns {BtcAddressValidationResult}
  */
 export function validateBech32(address: string): BtcAddressValidationResult;
 /**
- * Validates a Bitcoin address and returns a detailed result.
- * Supports: P2PKH (1...), P2SH (3...), Bech32 (bc1...).
+ * Validates a Bech32m address for any supported network.
+ * @param {string} address - The address to validate.
+ * @returns {BtcAddressValidationResult}
+ */
+export function validateBech32m(address: string): BtcAddressValidationResult;
+/**
+ * Validates a Bitcoin address for mainnet or testnet.
  *
- * @param {string} address
+ * @param {string} address The address to validate.
  * @returns {BtcAddressValidationResult}
  */
 export function validateBitcoinAddress(address: string): BtcAddressValidationResult;
 export type BtcAddressValidationSuccess = {
     success: true;
-    type: "p2pkh" | "p2sh" | "bech32";
+    type: "p2pkh" | "p2sh" | "bech32" | "bech32m";
+    network: "mainnet" | "testnet" | "regtest";
 };
 export type BtcAddressValidationFailure = {
     success: false;
