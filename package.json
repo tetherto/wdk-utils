@@ -9,6 +9,10 @@
   ],
   "author": "Tether",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tetherto/wdk-utils.git"
+  },
   "main": "index.js",
   "types": "./types",
   "type": "module",

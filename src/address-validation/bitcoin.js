@@ -55,7 +55,7 @@ const WITNESS_VERSION_BECH32 = 0
  * @param {string} address
  * @returns {{ decoded: Uint8Array } | BtcAddressValidationFailure}
  */
-function _decodeBase58(address) {
+function _decodeBase58 (address) {
   let decoded
 
   try {
@@ -113,20 +113,20 @@ function _validateP2SH (decoded) {
   return { success: false, reason: 'INVALID_VERSION_BYTE' }
 }
 
-export function validateBase58(address) {
+export function validateBase58 (address) {
   const result = _decodeBase58(address)
   if (!result.decoded) return result
-  
+
   const validateP2pkh = _validateP2PKH(result.decoded)
   if (validateP2pkh.success) {
     return validateP2pkh
   }
-  
+
   const validateP2sh = _validateP2SH(result.decoded)
   if (validateP2sh.success) {
     return validateP2sh
   }
-  
+
   return { success: false, reason: 'INVALID_VERSION_BYTE' }
 }
 
