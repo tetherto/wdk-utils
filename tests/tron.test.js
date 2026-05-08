@@ -74,4 +74,9 @@ describe('validateTronAddress', () => {
     const address = 'TNPefaaFB7K9cmo4uQpcU32zGK8G1NYqeL'
     expect(validateTronAddress(address)).toEqual({ success: false, reason: 'INVALID_CHECKSUM' })
   })
+
+  test('should return INVALID_PREFIX for an address with an invalid version byte', () => {
+    const address = 'TZJozAg1ruapycCicgz31GxvYJ1G1qELV7'
+    expect(validateTronAddress(address)).toEqual({ success: false, reason: 'INVALID_PREFIX' })
+  })
 })

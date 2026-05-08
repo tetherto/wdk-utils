@@ -16,6 +16,7 @@
 import { sha256 } from '@noble/hashes/sha2'
 import { base58 } from '@scure/base'
 
+const TRON_ADDRESS_PREFIX_BYTE = 0x41
 const TRON_ADDRESS_PREFIX = 'T'
 const TRON_ADDRESS_LENGTH = 34
 
@@ -46,6 +47,10 @@ export function validateTronAddress (address) {
 
   try {
     const decoded = base58.decode(trimmed)
+
+    if (decoded[0] !== TRON_ADDRESS_PREFIX_BYTE) {
+      return { success: false, reason: 'INVALID_PREFIX' }
+    }
     const payload = decoded.slice(0, -4)
     const checksum = decoded.slice(-4)
 
