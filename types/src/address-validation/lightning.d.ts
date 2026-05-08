@@ -49,7 +49,26 @@ export type LightningInvoiceValidationFailure = {
     reason: string;
 };
 export type LightningInvoiceValidationResult = LightningInvoiceValidationSuccess | LightningInvoiceValidationFailure;
-export type DecodedLightningInvoice = import("bolt11").PaymentRequestObject;
+export type DecodedLightningInvoice = {
+    paymentRequest?: string;
+    complete?: boolean;
+    prefix?: string;
+    wordsTemp?: string;
+    network?: object;
+    satoshis?: number | null;
+    millisatoshis?: string | null;
+    timestamp?: number;
+    timestampString?: string;
+    timeExpireDate?: number;
+    timeExpireDateString?: string;
+    payeeNodeKey?: string;
+    signature?: string;
+    recoveryFlag?: number;
+    tags: Array<{
+        tagName: string;
+        data: string | number | object;
+    }>;
+};
 export type LightningInvoiceDecodingSuccess = {
     success: true;
     type: "invoice";

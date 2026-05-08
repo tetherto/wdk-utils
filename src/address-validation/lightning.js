@@ -91,7 +91,22 @@ export function validateLightningInvoice (address) {
 }
 
 /**
- * @typedef {import('bolt11').PaymentRequestObject} DecodedLightningInvoice
+ * @typedef {object} DecodedLightningInvoice
+ * @property {string} [paymentRequest]
+ * @property {boolean} [complete]
+ * @property {string} [prefix]
+ * @property {string} [wordsTemp]
+ * @property {object} [network]
+ * @property {number | null} [satoshis]
+ * @property {string | null} [millisatoshis]
+ * @property {number} [timestamp]
+ * @property {string} [timestampString]
+ * @property {number} [timeExpireDate]
+ * @property {string} [timeExpireDateString]
+ * @property {string} [payeeNodeKey]
+ * @property {string} [signature]
+ * @property {number} [recoveryFlag]
+ * @property {Array<{tagName: string, data: string | number | object}>} tags
  */
 
 /**
