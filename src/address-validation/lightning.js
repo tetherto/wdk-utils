@@ -20,7 +20,6 @@
  */
 
 import { bech32 } from '@scure/base'
-import * as bolt11 from 'bolt11'
 
 const VALID_INVOICE_PREFIXES = ['lnbc', 'lntb', 'lnbcrt', 'lnsb']
 /** Lightning address: strict email (user@domain.tld). */
@@ -87,55 +86,6 @@ export function validateLightningInvoice (address) {
     }
 
     return { success: false, reason: 'INVALID_BECH32_FORMAT' }
-  }
-}
-
-/**
- * @typedef {object} DecodedLightningInvoice
- * @property {string} [paymentRequest]
- * @property {boolean} [complete]
- * @property {string} [prefix]
- * @property {string} [wordsTemp]
- * @property {object} [network]
- * @property {number | null} [satoshis]
- * @property {string | null} [millisatoshis]
- * @property {number} [timestamp]
- * @property {string} [timestampString]
- * @property {number} [timeExpireDate]
- * @property {string} [timeExpireDateString]
- * @property {string} [payeeNodeKey]
- * @property {string} [signature]
- * @property {number} [recoveryFlag]
- * @property {Array<{tagName: string, data: string | number | object}>} tags
- */
-
-/**
- * @typedef {{ success: true, type: 'invoice', data: DecodedLightningInvoice }} LightningInvoiceDecodingSuccess
- * @typedef {{ success: false, reason: string }} LightningInvoiceDecodingFailure
- * @typedef {LightningInvoiceDecodingSuccess | LightningInvoiceDecodingFailure} LightningInvoiceDecodingResult
- */
-
-/**
- * Decodes a BOLT11 Lightning Network invoice.
- *
- * @param {string} invoice The BOLT11 invoice string to decode.
- * @returns {LightningInvoiceDecodingResult}
- */
-export function decodeLightningInvoice (invoice) {
-  if (invoice == null || typeof invoice !== 'string') {
-    return { success: false, reason: 'INVALID_FORMAT' }
-  }
-
-  const trimmed = stripLightningPrefix(invoice)
-  if (trimmed.length === 0) {
-    return { success: false, reason: 'EMPTY_INVOICE' }
-  }
-
-  try {
-    const decoded = bolt11.decode(trimmed)
-    return { success: true, type: 'invoice', data: decoded }
-  } catch (e) {
-    return { success: false, reason: 'DECODING_FAILED' }
   }
 }
 

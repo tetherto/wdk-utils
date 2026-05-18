@@ -13,13 +13,6 @@ export function stripLightningPrefix(input: string): string;
  */
 export function validateLightningInvoice(address: string): LightningInvoiceValidationResult;
 /**
- * Decodes a BOLT11 Lightning Network invoice.
- *
- * @param {string} invoice The BOLT11 invoice string to decode.
- * @returns {LightningInvoiceDecodingResult}
- */
-export function decodeLightningInvoice(invoice: string): LightningInvoiceDecodingResult;
-/**
  * Validates an LNURL address (lnurl1... bech32 encoded URL).
  *
  * @param {string} address The LNURL to validate.
@@ -49,36 +42,6 @@ export type LightningInvoiceValidationFailure = {
     reason: string;
 };
 export type LightningInvoiceValidationResult = LightningInvoiceValidationSuccess | LightningInvoiceValidationFailure;
-export type DecodedLightningInvoice = {
-    paymentRequest?: string;
-    complete?: boolean;
-    prefix?: string;
-    wordsTemp?: string;
-    network?: object;
-    satoshis?: number | null;
-    millisatoshis?: string | null;
-    timestamp?: number;
-    timestampString?: string;
-    timeExpireDate?: number;
-    timeExpireDateString?: string;
-    payeeNodeKey?: string;
-    signature?: string;
-    recoveryFlag?: number;
-    tags: Array<{
-        tagName: string;
-        data: string | number | object;
-    }>;
-};
-export type LightningInvoiceDecodingSuccess = {
-    success: true;
-    type: "invoice";
-    data: DecodedLightningInvoice;
-};
-export type LightningInvoiceDecodingFailure = {
-    success: false;
-    reason: string;
-};
-export type LightningInvoiceDecodingResult = LightningInvoiceDecodingSuccess | LightningInvoiceDecodingFailure;
 export type LnurlValidationSuccess = {
     success: true;
     type: "lnurl";
