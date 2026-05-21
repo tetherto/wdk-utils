@@ -4,5 +4,4 @@ export * from "./lightning.js";
 export * from "./spark.js";
 export * from "./tron.js";
 export * from "./uma.js";
-export * from "./bolt11.js";
 export * from "./utils.js";

@@ -3,7 +3,6 @@ import {
   validateLnurl,
   decodeLnurl
 } from '../src/address-validation/lightning.js'
-import { validateLightningInvoice } from '../src/address-validation/bolt11.js'
 import { stripLightningPrefix } from '../src/address-validation/utils.js'
 
 describe('lightning', () => {
@@ -25,46 +24,6 @@ describe('lightning', () => {
     })
   })
 
-  const validLnbc = 'lnbc100u1p5m3k6fpp5uk9rs7fdrvssehzthphfjvpc3t5hyacgrveskwqzwclrdsl0cjgsdqydp5scqzzsxqrrssrzjqvgptfurj3528snx6e3dtwepafxw5fpzdymw9pj20jj09sunnqmwqqqqqyqqqqqqqqqqqqqqqqqqqqqqjqnp4qtem70et4qm86lv449zcpqjn9nmamd6qrzm3wa3d7msnq2kx3yapwsp50c4l2z72hcmejj88en6eu2p8u2ypv87pw5pndzjjtclwaw0f7wds9qyyssqtqeqrvaaw92y7at9463vxhwkjdy7lpxet7h6g4vry8xyw4ar9yn8qq36dryntpf252v58c4hrf4g59z2pr25lhp06n7x4z7yltd022cqk7lc7e'
-
-  describe('validateLightningInvoice', () => {
-    it('returns success for valid invoices', () => {
-      expect(validateLightningInvoice(validLnbc)).toEqual({ success: true, type: 'invoice' })
-    })
-
-    it('returns success for a long, realistic invoice', () => {
-      const longInvoice = 'lnbc1p5mg4kmpp5xh4a2kdx625hjc7f446ktn5pzq5ht2fztv0r4sqlhpw3xr406pmqsp5fy8p4h22ggwejpvs0xen6rdejpkvf4yxxzxnneyk8u52xhq3z7fsxq9z0rgqnp4qvyndeaqzman7h898jxm98dzkm0mlrsx36s93smrur7h0azyyuxc5rzjq25carzepgd4vqsyn44jrk85ezrpju92xyrk9apw4cdjh6yrwt5jgqqqqrt49lmtcqqqqqqqqqqq86qq9qrzjqw668wp0gj9vsx8dwpt7j4qv4m7zmkklnslzj0dwwwjz20v4ad6vtapyqr6zgqqqq8hxk2qqae4jsqyugqcqzpgdqq9qyyssqj8gyv9s2gftgg0nktqj8t87qam3wcn8nfadp3qjc935r4xuna77zc4g2zapmx55cjm3kyn6ff8khttnvxw4n6qe7dur3a6fqzpldx3gpky6f6z'
-      expect(validateLightningInvoice(longInvoice)).toEqual({ success: true, type: 'invoice' })
-    })
-
-    it('strips "lightning:" prefix before validating', () => {
-      expect(validateLightningInvoice('lightning:' + validLnbc)).toEqual({ success: true, type: 'invoice' })
-    })
-
-    it('returns INVALID_LENGTH for invoices shorter than 20 chars', () => {
-      expect(validateLightningInvoice('lnbc1qyqsm94tzr')).toEqual({ success: false, reason: 'INVALID_LENGTH' })
-    })
-
-    it('returns INVALID_PREFIX for unknown prefixes', () => {
-      expect(validateLightningInvoice('lnxx1' + 'x'.repeat(20))).toEqual({ success: false, reason: 'INVALID_PREFIX' })
-    })
-
-    it('returns INVALID_BECH32_FORMAT for invalid checksum', () => {
-      const badChecksum = validLnbc.slice(0, -1) + 'q'
-      expect(validateLightningInvoice(badChecksum)).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' })
-    })
-
-    it('returns EMPTY_ADDRESS for empty or whitespace strings', () => {
-      expect(validateLightningInvoice('')).toEqual({ success: false, reason: 'EMPTY_ADDRESS' })
-      expect(validateLightningInvoice('  ')).toEqual({ success: false, reason: 'EMPTY_ADDRESS' })
-    })
-
-    it('returns INVALID_FORMAT for non-string inputs', () => {
-      expect(validateLightningInvoice(null)).toEqual({ success: false, reason: 'INVALID_FORMAT' })
-      expect(validateLightningInvoice(undefined)).toEqual({ success: false, reason: 'INVALID_FORMAT' })
-    })
-  })
-
   describe('validateLnurl', () => {
     const validLnurl = 'lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhhxurj093k7mtxdae8gwfjnztwnf'
 
@@ -74,6 +33,7 @@ describe('lightning', () => {
     })
 
     it('returns INVALID_PREFIX for a non-lnurl bech32 string', () => {
+      const validLnbc = 'lnbc100u1p5m3k6fpp5uk9rs7fdrvssehzthphfjvpc3t5hyacgrveskwqzwclrdsl0cjgsdqydp5scqzzsxqrrssrzjqvgptfurj3528snx6e3dtwepafxw5fpzdymw9pj20jj09sunnqmwqqqqqyqqqqqqqqqqqqqqqqqqqqqqjqnp4qtem70et4qm86lv449zcpqjn9nmamd6qrzm3wa3d7msnq2kx3yapwsp50c4l2z72hcmejj88en6eu2p8u2ypv87pw5pndzjjtclwaw0f7wds9qyyssqtqeqrvaaw92y7at9463vxhwkjdy7lpxet7h6g4vry8xyw4ar9yn8qq36dryntpf252v58c4hrf4g59z2pr25lhp06n7x4z7yltd022cqk7lc7e'
       expect(validateLnurl(validLnbc)).toEqual({ success: false, reason: 'INVALID_PREFIX' })
     })
 
