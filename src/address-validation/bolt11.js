@@ -13,7 +13,7 @@ import { secp256k1 } from '@noble/curves/secp256k1.js'
 
 /**
 * @typedef {object} DecodedLightningInvoice
-* @property {string} network
+* @property {'bitcoin' | 'regtest' | 'testnet' | 'signet'} network
 * @property {string | null} [millisatoshis]
 * @property {number} [timestamp]
 * @property {number} [timeExpireDate]
@@ -403,7 +403,7 @@ function encodeTag (tagName, data) {
 
     return tagWords
   } catch (e) {
-    throw new Error(e.message.startsWith('ENCODE_TAG_FAILED') ? e.message : `ENCODE_TAG_FAILED: ${tagName} (${e.message})`)
+    throw new Error(`ENCODE_TAG_FAILED: ${tagName} (${e?.message})`)
   }
 }
 
@@ -414,45 +414,31 @@ function encodeTag (tagName, data) {
  */
 export function validateInvoiceData (invoiceData) {
   if (!invoiceData.network) throw new Error('NETWORK_REQUIRED')
-  if (!VALID_PREFIXES.some(p => p.network === invoiceData.network)) {
-    throw new Error('INVALID_NETWORK')
-  }
+  if (!VALID_PREFIXES.some(p => p.network === invoiceData.network)) throw new Error('INVALID_NETWORK')
 
   const tags = invoiceData.tags || []
   const tagNames = tags.map(t => t.tagName)
 
-  if (!tagNames.includes('payment_hash')) {
-    throw new Error('MISSING_PAYMENT_HASH')
-  }
+  if (!tagNames.includes('payment_hash')) throw new Error('MISSING_PAYMENT_HASH')
 
   const hasDescription = tagNames.includes('description')
   const hasDescriptionHash = tagNames.includes('purpose_commit_hash')
 
-  if (!hasDescription && !hasDescriptionHash) {
-    throw new Error('MISSING_DESCRIPTION')
-  }
-  if (hasDescription && hasDescriptionHash) {
-    throw new Error('MUTUALLY_EXCLUSIVE_TAGS')
-  }
+  if (!hasDescription && !hasDescriptionHash) throw new Error('MISSING_DESCRIPTION')
+  if (hasDescription && hasDescriptionHash) throw new Error('MUTUALLY_EXCLUSIVE_TAGS')
 
   const uniqueTags = ['payment_hash', 'payment_secret', 'expiry', 'payee_node_key']
   for (const name of uniqueTags) {
-    if (tags.filter(t => t.tagName === name).length > 1) {
-      throw new Error('DUPLICATE_TAG')
-    }
+    if (tags.filter(t => t.tagName === name).length > 1) throw new Error('DUPLICATE_TAG')
   }
 
   if (invoiceData.millisatoshis) {
     const msats = BigInt(invoiceData.millisatoshis)
-    if (msats > MAX_MILLISATS) {
-      throw new Error('AMOUNT_TOO_LARGE')
-    }
+    if (msats > MAX_MILLISATS) throw new Error('AMOUNT_TOO_LARGE')
   }
 
   const timestamp = BigInt(invoiceData.timestamp || Math.floor(Date.now() / 1000))
-  if (timestamp >= 2n ** 35n) {
-    throw new Error('TIMESTAMP_TOO_LARGE')
-  }
+  if (timestamp >= 2n ** 35n) throw new Error('TIMESTAMP_TOO_LARGE')
 }
 
 function prepareWords (invoiceData) {
@@ -471,6 +457,7 @@ function prepareWords (invoiceData) {
 
   const tagsWords = []
   for (const tag of tags) {
+    if (['fallback_address', 'routing_info', 'feature_bits'].includes(tag.tagName)) continue
     tagsWords.push(...encodeTag(tag.tagName, tag.data))
   }
 
@@ -518,15 +505,15 @@ export function sign (invoiceData, privateKey) {
       ? hexToBytes(privateKey)
       : new Uint8Array(privateKey)
 
-    const sig = secp256k1.sign(hashResult.data, privKeyBytes)
+    const sigBytes = secp256k1.sign(hashResult.data, privKeyBytes, { format: 'recovered', prehash: false })
 
     return {
       success: true,
       type: 'invoice',
       data: {
         ...invoiceData,
-        signature: bytesToHex(sig.toCompactRawBytes()),
-        recoveryFlag: sig.recovery
+        signature: bytesToHex(sigBytes.subarray(1)),
+        recoveryFlag: sigBytes[0]
       }
     }
   } catch (e) {
@@ -563,6 +550,6 @@ export function encode (invoiceData) {
 
     return { success: true, type: 'invoice', data: bech32.encode(hrp, finalWords, false) }
   } catch (e) {
-    return { success: false, reason: e.message.includes(' ') ? 'ENCODING_FAILED' : e.message }
+    return { success: false, reason: e.message ?? 'ENCODING_FAILED' }
   }
 }

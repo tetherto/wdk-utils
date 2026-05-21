@@ -1,10 +1,10 @@
 import {
-  validateLightningInvoice,
   validateLightningAddress,
   validateLnurl,
-  stripLightningPrefix,
   decodeLnurl
 } from '../src/address-validation/lightning.js'
+import { validateLightningInvoice } from '../src/address-validation/bolt11.js'
+import { stripLightningPrefix } from '../src/address-validation/utils.js'
 
 describe('lightning', () => {
   describe('stripLightningPrefix', () => {
@@ -62,40 +62,6 @@ describe('lightning', () => {
     it('returns INVALID_FORMAT for non-string inputs', () => {
       expect(validateLightningInvoice(null)).toEqual({ success: false, reason: 'INVALID_FORMAT' })
       expect(validateLightningInvoice(undefined)).toEqual({ success: false, reason: 'INVALID_FORMAT' })
-    })
-  })
-
-  describe.skip('decodeLightningInvoice', () => {
-    const invoiceWithAmount = 'lnbc15u1p3xnhl2pp5jptserfk3zk4qy42tlucycrfwxhydvlemu9pqr93tuzlv9cc7g3sdqsvfhkcap3xyhx7un8cqzpgxqzjcsp5f8c52y2stc300gl6s4xswtjpc37hrnnr3c9wvtgjfuvqmpm35evq9qyyssqy4lgd8tj637qcjp05rdpxxykjenthxftej7a2zzmwrmrl70fyj9hvj0rewhzj7jfyuwkwcg9g2jpwtk3wkjtwnkdks84hsnu8xps5vsq4gj5hs'
-    const invoiceWithoutAmount = 'lnbc1p5mg4kmpp5xh4a2kdx625hjc7f446ktn5pzq5ht2fztv0r4sqlhpw3xr406pmqsp5fy8p4h22ggwejpvs0xen6rdejpkvf4yxxzxnneyk8u52xhq3z7fsxq9z0rgqnp4qvyndeaqzman7h898jxm98dzkm0mlrsx36s93smrur7h0azyyuxc5rzjq25carzepgd4vqsyn44jrk85ezrpju92xyrk9apw4cdjh6yrwt5jgqqqqrt49lmtcqqqqqqqqqqq86qq9qrzjqw668wp0gj9vsx8dwpt7j4qv4m7zmkklnslzj0dwwwjz20v4ad6vtapyqr6zgqqqq8hxk2qqae4jsqyugqcqzpgdqq9qyyssqj8gyv9s2gftgg0nktqj8t87qam3wcn8nfadp3qjc935r4xuna77zc4g2zapmx55cjm3kyn6ff8khttnvxw4n6qe7dur3a6fqzpldx3gpky6f6z'
-
-    it('should decode a valid invoice with amount', () => {
-      const result = decodeLightningInvoice(invoiceWithAmount)
-      expect(result.success).toBe(true)
-      expect(result.data.satoshis).toBe(1500)
-      expect(result.data.millisatoshis).toBe('1500000')
-    })
-
-    it('should decode a valid invoice without amount', () => {
-      const result = decodeLightningInvoice(invoiceWithoutAmount)
-      expect(result.success).toBe(true)
-      expect(result.data.satoshis).toBe(null)
-      expect(result.data.millisatoshis).toBe(null)
-    })
-
-    it('should return DECODING_FAILED for an invalid invoice', () => {
-      const result = decodeLightningInvoice('not a bolt11 invoice')
-      expect(result).toEqual({ success: false, reason: 'DECODING_FAILED' })
-    })
-
-    it('should return EMPTY_INVOICE for an empty string', () => {
-      const result = decodeLightningInvoice('')
-      expect(result).toEqual({ success: false, reason: 'EMPTY_INVOICE' })
-    })
-
-    it('should return INVALID_FORMAT for null input', () => {
-      const result = decodeLightningInvoice(null)
-      expect(result).toEqual({ success: false, reason: 'INVALID_FORMAT' })
     })
   })
 

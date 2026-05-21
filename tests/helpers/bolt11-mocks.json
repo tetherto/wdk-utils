@@ -1,0 +1,306 @@
+[
+  {
+    "invoice": "lnbc100u1p5m3k6fpp5uk9rs7fdrvssehzthphfjvpc3t5hyacgrveskwqzwclrdsl0cjgsdqydp5scqzzsxqrrssrzjqvgptfurj3528snx6e3dtwepafxw5fpzdymw9pj20jj09sunnqmwqqqqqyqqqqqqqqqqqqqqqqqqqqqqjqnp4qtem70et4qm86lv449zcpqjn9nmamd6qrzm3wa3d7msnq2kx3yapwsp50c4l2z72hcmejj88en6eu2p8u2ypv87pw5pndzjjtclwaw0f7wds9qyyssqtqeqrvaaw92y7at9463vxhwkjdy7lpxet7h6g4vry8xyw4ar9yn8qq36dryntpf252v58c4hrf4g59z2pr25lhp06n7x4z7yltd022cqk7lc7e",
+    "success": true,
+    "data": {
+      "network": "bitcoin",
+      "millisatoshis": "10000000",
+      "timestamp": 1773722441,
+      "payeeNodeKey": "02f3bf3f2ba8367d7d95a9458082532cf7ddb74018b717762df6e1302ac6893a17",
+      "signature": "583201b3bd71544f7565aea2c35dd69349ef84d95fafa4558321cc4757a3292670023a68c935852aa29943e2b71a6a8a144a08d54fdc2fd4fc6a8bc4fadaf52b",
+      "recoveryFlag": 0,
+      "tags": [
+        {
+          "tagName": "payment_hash",
+          "data": "e58a38792d1b210cdc4bb86e9930388ae97277081b330b3802763e36c3efc491"
+        },
+        {
+          "tagName": "description",
+          "data": "hi"
+        },
+        {
+          "tagName": "min_final_cltv_expiry",
+          "data": 80
+        },
+        {
+          "tagName": "expiry",
+          "data": 3600
+        },
+        {
+          "tagName": "routing_info",
+          "data": [
+            {
+              "pubkey": "031015a7839468a3c266d662d5bb21ea4cea24226936e2864a7ca4f2c3939836e0",
+              "short_channel_id": "0000010000000000",
+              "fee_base_msat": 0,
+              "fee_proportional_millionths": 0,
+              "cltv_expiry_delta": 144
+            }
+          ]
+        },
+        {
+          "tagName": "payee_node_key",
+          "data": "02f3bf3f2ba8367d7d95a9458082532cf7ddb74018b717762df6e1302ac6893a17"
+        },
+        {
+          "tagName": "payment_secret",
+          "data": "7e2bf50bcabe379948e7ccf59e2827e288161fc17503368a525e3eeeb9e9f39b"
+        },
+        {
+          "tagName": "feature_bits",
+          "data": {
+            "word_length": 4,
+            "option_data_loss_protect": {
+              "required": false,
+              "supported": false
+            },
+            "initial_routing_sync": {
+              "required": false,
+              "supported": false
+            },
+            "option_upfront_shutdown_script": {
+              "required": false,
+              "supported": false
+            },
+            "gossip_queries": {
+              "required": false,
+              "supported": false
+            },
+            "var_onion_optin": {
+              "required": false,
+              "supported": true
+            },
+            "gossip_queries_ex": {
+              "required": false,
+              "supported": false
+            },
+            "option_static_remotekey": {
+              "required": false,
+              "supported": false
+            },
+            "payment_secret": {
+              "required": true,
+              "supported": false
+            },
+            "basic_mpp": {
+              "required": false,
+              "supported": true
+            },
+            "option_support_large_channel": {
+              "required": false,
+              "supported": false
+            },
+            "extra_bits": {
+              "start_bit": 20,
+              "bits": [],
+              "has_required": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "invoice": "lnbc15u1p3xnhl2pp5jptserfk3zk4qy42tlucycrfwxhydvlemu9pqr93tuzlv9cc7g3sdqsvfhkcap3xyhx7un8cqzpgxqzjcsp5f8c52y2stc300gl6s4xswtjpc37hrnnr3c9wvtgjfuvqmpm35evq9qyyssqy4lgd8tj637qcjp05rdpxxykjenthxftej7a2zzmwrmrl70fyj9hvj0rewhzj7jfyuwkwcg9g2jpwtk3wkjtwnkdks84hsnu8xps5vsq4gj5hs",
+    "success": true,
+    "data": {
+      "network": "bitcoin",
+      "millisatoshis": "1500000",
+      "timestamp": 1651105770,
+      "payeeNodeKey": "03d6b14390cd178d670aa2d57c93d9519feaae7d1e34264d8bbb7932d47b75a50d",
+      "signature": "257e869d72d47c0c482fa0da1318969666bb992bccbdd5085b70f63ff9e9248b7649e3cbae297a49271d67610542a4172ed175a4b74ecdb40f5bc27c39830a32",
+      "recoveryFlag": 0,
+      "tags": [
+        {
+          "tagName": "payment_hash",
+          "data": "90570c8d3688ad5012aa5ff982606971ae46b3f9df0a100cb15f05f61718f223"
+        },
+        {
+          "tagName": "description",
+          "data": "bolt11.org"
+        },
+        {
+          "tagName": "min_final_cltv_expiry",
+          "data": 40
+        },
+        {
+          "tagName": "expiry",
+          "data": 600
+        },
+        {
+          "tagName": "payment_secret",
+          "data": "49f14511505e22f7a3fa854d072e41c47d71ce638e0ae62d124f180d8771a658"
+        },
+        {
+          "tagName": "feature_bits",
+          "data": {
+            "word_length": 4,
+            "option_data_loss_protect": {
+              "required": false,
+              "supported": false
+            },
+            "initial_routing_sync": {
+              "required": false,
+              "supported": false
+            },
+            "option_upfront_shutdown_script": {
+              "required": false,
+              "supported": false
+            },
+            "gossip_queries": {
+              "required": false,
+              "supported": false
+            },
+            "var_onion_optin": {
+              "required": false,
+              "supported": true
+            },
+            "gossip_queries_ex": {
+              "required": false,
+              "supported": false
+            },
+            "option_static_remotekey": {
+              "required": false,
+              "supported": false
+            },
+            "payment_secret": {
+              "required": true,
+              "supported": false
+            },
+            "basic_mpp": {
+              "required": false,
+              "supported": true
+            },
+            "option_support_large_channel": {
+              "required": false,
+              "supported": false
+            },
+            "extra_bits": {
+              "start_bit": 20,
+              "bits": [],
+              "has_required": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "invoice": "lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5s9jtndp5xs6q3syqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdp7qc8nq286p",
+    "success": false,
+    "reason": "Invalid checksum for lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5s9jtndp5xs6q3syqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdp7qc8nq286p"
+  },
+  {
+    "invoice": "lnbc1p5mg4kmpp5xh4a2kdx625hjc7f446ktn5pzq5ht2fztv0r4sqlhpw3xr406pmqsp5fy8p4h22ggwejpvs0xen6rdejpkvf4yxxzxnneyk8u52xhq3z7fsxq9z0rgqnp4qvyndeaqzman7h898jxm98dzkm0mlrsx36s93smrur7h0azyyuxc5rzjq25carzepgd4vqsyn44jrk85ezrpju92xyrk9apw4cdjh6yrwt5jgqqqqrt49lmtcqqqqqqqqqqq86qq9qrzjqw668wp0gj9vsx8dwpt7j4qv4m7zmkklnslzj0dwwwjz20v4ad6vtapyqr6zgqqqq8hxk2qqae4jsqyugqcqzpgdqq9qyyssqj8gyv9s2gftgg0nktqj8t87qam3wcn8nfadp3qjc935r4xuna77zc4g2zapmx55cjm3kyn6ff8khttnvxw4n6qe7dur3a6fqzpldx3gpky6f6z",
+    "success": true,
+    "data": {
+      "network": "bitcoin",
+      "millisatoshis": null,
+      "timestamp": 1773426395,
+      "payeeNodeKey": "030936e7a016fb3f5ce53c8db29da2b6dfbf8e068ea058c363e0fd77f444270d8a",
+      "signature": "91d046160a4256843e765824759fc0eee2ec4cf34f5a1882582c683a9b93efbc2c550a1743b3529896e3624f4949ed75ae6c33ab3d033e6f071ee920107ed345",
+      "recoveryFlag": 1,
+      "tags": [
+        {
+          "tagName": "payment_hash",
+          "data": "35ebd559a6d2a97963c9ad7565ce81102975a9225b1e3ac01fb85d130eafd076"
+        },
+        {
+          "tagName": "payment_secret",
+          "data": "490e1add4a421d99059079b33d0db9906cc4d486308d39e4963f28a35c111793"
+        },
+        {
+          "tagName": "expiry",
+          "data": 2592000
+        },
+        {
+          "tagName": "payee_node_key",
+          "data": "030936e7a016fb3f5ce53c8db29da2b6dfbf8e068ea058c363e0fd77f444270d8a"
+        },
+        {
+          "tagName": "routing_info",
+          "data": [
+            {
+              "pubkey": "02a98e8c590a1b5602049d6b21d8f4c8861970aa310762f42eae1b2be88372e924",
+              "short_channel_id": "000000d752ff6bc0",
+              "fee_base_msat": 0,
+              "fee_proportional_millionths": 1000,
+              "cltv_expiry_delta": 40
+            }
+          ]
+        },
+        {
+          "tagName": "routing_info",
+          "data": [
+            {
+              "pubkey": "03b5a3b82f448ac818ed7057e9540caefc2ddadf9c3e293dae73a4253d95eb74c5",
+              "short_channel_id": "f42400f424000001",
+              "fee_base_msat": 4000000000,
+              "fee_proportional_millionths": 4000000000,
+              "cltv_expiry_delta": 40000
+            }
+          ]
+        },
+        {
+          "tagName": "min_final_cltv_expiry",
+          "data": 40
+        },
+        {
+          "tagName": "description",
+          "data": ""
+        },
+        {
+          "tagName": "feature_bits",
+          "data": {
+            "word_length": 4,
+            "option_data_loss_protect": {
+              "required": false,
+              "supported": false
+            },
+            "initial_routing_sync": {
+              "required": false,
+              "supported": false
+            },
+            "option_upfront_shutdown_script": {
+              "required": false,
+              "supported": false
+            },
+            "gossip_queries": {
+              "required": false,
+              "supported": false
+            },
+            "var_onion_optin": {
+              "required": false,
+              "supported": true
+            },
+            "gossip_queries_ex": {
+              "required": false,
+              "supported": false
+            },
+            "option_static_remotekey": {
+              "required": false,
+              "supported": false
+            },
+            "payment_secret": {
+              "required": true,
+              "supported": false
+            },
+            "basic_mpp": {
+              "required": false,
+              "supported": true
+            },
+            "option_support_large_channel": {
+              "required": false,
+              "supported": false
+            },
+            "extra_bits": {
+              "start_bit": 20,
+              "bits": [],
+              "has_required": false
+            }
+          }
+        }
+      ]
+    }
+  }
+]
