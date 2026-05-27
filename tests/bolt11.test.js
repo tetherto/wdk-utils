@@ -1,6 +1,7 @@
 import { decode, encode, sign, validateLightningInvoice } from '../src/bolt11/index.js'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 import fs from 'fs'
+import * as bolt11 from 'bolt11'
 
 const MOCK_DATA = JSON.parse(fs.readFileSync('tests/helpers/bolt11-mocks.json', 'utf8'))
 const MOCK_SUCCESS_DATA = MOCK_DATA.filter(v => v.success)
@@ -136,7 +137,7 @@ describe('BOLT11 Tests', () => {
         const cleanTags = vector.data.tags
           .filter(t => t.tagName !== 'payee_node_key')
           .map(t => ({ tagName: t.tagName, data: t.data }))
-        
+
         cleanTags.push({ tagName: 'payee_node_key', data: MOCK_PUB_KEY_HEX })
 
         const cleanData = {
@@ -250,6 +251,103 @@ describe('BOLT11 Tests', () => {
       const result = sign(invalidData, MOCK_PRIVATE_KEY)
       expect(result.success).toBe(false)
       expect(result.reason).toContain('TAG_DATA_TOO_LONG')
+    })
+  })
+
+  describe('Cross-Library Compatibility', () => {
+    it('should be decodable by the "bolt11" library when encoded by us', () => {
+      const paymentHash = "00".repeat(32)
+      const description = "test invoice"
+      const millisatoshis = "1000"
+      const network = "bitcoin"
+
+      const invoiceData = {
+        network,
+        millisatoshis,
+        timestamp: Math.floor(Date.now() / 1000),
+        tags: [
+          { tagName: "payment_hash", data: paymentHash },
+          { tagName: "description", data: description },
+        ]
+      }
+
+      const signed = sign(invoiceData, MOCK_PRIVATE_KEY)
+      expect(signed.success).toBe(true)
+
+      const encoded = encode(signed.data)
+      expect(encoded.success).toBe(true)
+
+      const bolt11Decoded = bolt11.decode(encoded.data)
+      expect(bolt11Decoded.millisatoshis).toBe(millisatoshis)
+      expect(bolt11Decoded.tagsObject.payment_hash).toBe(paymentHash)
+      expect(bolt11Decoded.tagsObject.description).toBe(description)
+      expect(bolt11Decoded.payeeNodeKey).toBe(MOCK_PUB_KEY_HEX)
+    })
+
+    it('should be decodable by us when encoded by the "bolt11" library', () => {
+      const paymentHash = "11".repeat(32)
+      const description = "cross-lib test"
+      const millisatoshis = "5000"
+
+      const bolt11Data = {
+        network: {
+          bech32: "bc",
+          pubKeyHash: 0x00,
+          scriptHash: 0x05,
+          validWitnessVersions: [0],
+        },
+        millisatoshis,
+        tags: [
+          { tagName: 'payment_hash', data: paymentHash },
+          { tagName: 'description', data: description }
+        ]
+        }
+
+        const prepared = bolt11.encode(bolt11Data, true)
+        const signed = bolt11.sign(prepared, Buffer.from(MOCK_PRIVATE_KEY))
+        const encoded = bolt11.encode(signed)
+        const invoiceStr = encoded.paymentRequest
+
+        const ourDecoded = decode(invoiceStr)
+
+      expect(ourDecoded.success).toBe(true)
+      if (ourDecoded.success) {
+        expect(ourDecoded.data.millisatoshis).toBe(millisatoshis)
+        expect(ourDecoded.data.payeeNodeKey).toBe(MOCK_PUB_KEY_HEX)
+
+        const ph = ourDecoded.data.tags.find(
+          (t) => t.tagName === "payment_hash"
+        );
+        const ds = ourDecoded.data.tags.find(
+          (t) => t.tagName === "description"
+        );
+        expect(ph.data).toBe(paymentHash)
+        expect(ds.data).toBe(description)
+      }
+    })
+
+    it('should match decoding results from "bolt11" library for mock vectors', () => {
+      MOCK_SUCCESS_DATA.slice(0, 5).forEach((vector) => {
+        const result = decode(vector.invoice)
+        const bolt11Result = bolt11.decode(vector.invoice)
+
+        expect(result.success).toBe(true)
+        if (result.success) {
+          expect(result.data.millisatoshis).toBe(bolt11Result.millisatoshis || null)
+          expect(result.data.timestamp).toBe(bolt11Result.timestamp)
+          expect(result.data.payeeNodeKey).toBe(bolt11Result.payeeNodeKey)
+
+          // Compare important tags
+          if (bolt11Result.tagsObject.payment_hash) {
+            const ourPh = result.data.tags.find(t => t.tagName === 'payment_hash')
+            expect(ourPh.data).toBe(bolt11Result.tagsObject.payment_hash)
+          }
+          if (bolt11Result.tagsObject.description) {
+            const ourDesc = result.data.tags.find(t => t.tagName === 'description')
+            expect(ourDesc.data).toBe(bolt11Result.tagsObject.description)
+          }
+        }
+      })
     })
   })
 })

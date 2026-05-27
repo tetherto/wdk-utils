@@ -32,7 +32,8 @@
     "cross-env": "7.0.3",
     "jest": "29.7.0",
     "standard": "17.1.2",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "bolt11": "^1.4.1"
   },
   "exports": {
     ".": {
