@@ -607,7 +607,6 @@ function prepareWords (invoiceData) {
     tagsWords.push(...encodeTag(tag.tagName, tag.data, networkInfo))
   }
 
-
   const bodyWords = new Uint8Array(timestampWords.length + tagsWords.length)
   bodyWords.set(timestampWords)
   bodyWords.set(new Uint8Array(tagsWords), timestampWords.length)
