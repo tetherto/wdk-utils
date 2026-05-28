@@ -20,74 +20,10 @@
  */
 
 import { bech32 } from '@scure/base'
+import { stripLightningPrefix } from './utils.js'
 
-const VALID_INVOICE_PREFIXES = ['lnbc', 'lntb', 'lnbcrt', 'lnsb']
 /** Lightning address: strict email (user@domain.tld). */
 const LIGHTNING_ADDRESS_EMAIL_REGEX = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-
-/**
- * Strips "lightning:" URI prefix (case-insensitive). The input is trimmed first.
- *
- * @param {string} input
- * @returns {string} Returns a string. Returns an empty string if input is not a string.
- */
-export function stripLightningPrefix (input) {
-  if (typeof input !== 'string') {
-    return ''
-  }
-
-  const trimmed = input.trim()
-  if (trimmed.toLowerCase().startsWith('lightning:')) {
-    return trimmed.slice(10).trim()
-  }
-
-  return trimmed
-}
-
-/**
- * @typedef {{ success: true, type: 'invoice' }} LightningInvoiceValidationSuccess
- * @typedef {{ success: false, reason: string }} LightningInvoiceValidationFailure
- * @typedef {LightningInvoiceValidationSuccess | LightningInvoiceValidationFailure} LightningInvoiceValidationResult
- */
-
-/**
- * Validates a Lightning Network invoice (lnbc, lntb, lnbcrt, lni; length >= 20).
- *
- * @param {string} address The invoice to validate.
- * @returns {LightningInvoiceValidationResult}
- */
-export function validateLightningInvoice (address) {
-  if (address == null || typeof address !== 'string') {
-    return { success: false, reason: 'INVALID_FORMAT' }
-  }
-
-  const invoice = stripLightningPrefix(address)
-  if (invoice.length === 0) {
-    return { success: false, reason: 'EMPTY_ADDRESS' }
-  }
-
-  const lowerInvoice = invoice.toLowerCase()
-
-  const hasValidPrefix = VALID_INVOICE_PREFIXES.some((prefix) =>
-    lowerInvoice.startsWith(prefix)
-  )
-  if (!hasValidPrefix) {
-    return { success: false, reason: 'INVALID_PREFIX' }
-  }
-  if (invoice.length < 20) {
-    return { success: false, reason: 'INVALID_LENGTH' }
-  }
-  try {
-    bech32.decode(invoice, false)
-    return { success: true, type: 'invoice' }
-  } catch (e) {
-    if (e && e.message && e.message.toLowerCase().includes('lowercase or uppercase')) {
-      return { success: false, reason: 'MIXED_CASE' }
-    }
-
-    return { success: false, reason: 'INVALID_BECH32_FORMAT' }
-  }
-}
 
 /**
  * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
