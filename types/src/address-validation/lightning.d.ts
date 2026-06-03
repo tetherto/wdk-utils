@@ -4,14 +4,6 @@
  * @param {string} input
  * @returns {string} Returns a string. Returns an empty string if input is not a string.
  */
-export function stripLightningPrefix(input: string): string;
-/**
- * Validates a Lightning Network invoice (lnbc, lntb, lnbcrt, lni; length >= 20).
- *
- * @param {string} address The invoice to validate.
- * @returns {LightningInvoiceValidationResult}
- */
-export function validateLightningInvoice(address: string): LightningInvoiceValidationResult;
 /**
  * Validates an LNURL address (lnurl1... bech32 encoded URL).
  *
@@ -33,15 +25,6 @@ export function decodeLnurl(address: string): LnurlDecodingResult;
  * @returns {LightningAddressValidationResult}
  */
 export function validateLightningAddress(address: string): LightningAddressValidationResult;
-export type LightningInvoiceValidationSuccess = {
-    success: true;
-    type: "invoice";
-};
-export type LightningInvoiceValidationFailure = {
-    success: false;
-    reason: string;
-};
-export type LightningInvoiceValidationResult = LightningInvoiceValidationSuccess | LightningInvoiceValidationFailure;
 export type LnurlValidationSuccess = {
     success: true;
     type: "lnurl";
