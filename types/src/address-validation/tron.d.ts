@@ -1,4 +1,9 @@
 /**
+ * @typedef {{ success: true, type: 'tron' }} TronAddressValidationSuccess
+ * @typedef {{ success: false, reason: string }} TronAddressValidationFailure
+ * @typedef {TronAddressValidationSuccess | TronAddressValidationFailure} TronAddressValidationResult
+ */
+/**
  * Validates a Tron address.
  *
  * @param {string} address The address to validate.

@@ -1,8 +1,7 @@
 /**
- * Strips "lightning:" URI prefix (case-insensitive). The input is trimmed first.
- *
- * @param {string} input
- * @returns {string} Returns a string. Returns an empty string if input is not a string.
+ * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
+ * @typedef {{ success: false, reason: string }} LnurlValidationFailure
+ * @typedef {LnurlValidationSuccess | LnurlValidationFailure} LnurlValidationResult
  */
 /**
  * Validates an LNURL address (lnurl1... bech32 encoded URL).
@@ -12,12 +11,22 @@
  */
 export function validateLnurl(address: string): LnurlValidationResult;
 /**
+ * @typedef {{ success: true, type: 'lnurl', data: string }} LnurlDecodingSuccess
+ * @typedef {{ success: false, reason: string }} LnurlDecodingFailure
+ * @typedef {LnurlDecodingSuccess | LnurlDecodingFailure} LnurlDecodingResult
+ */
+/**
  * Decodes an LNURL address into its original URL.
  *
  * @param {string} address The LNURL to decode.
  * @returns {LnurlDecodingResult}
  */
 export function decodeLnurl(address: string): LnurlDecodingResult;
+/**
+ * @typedef {{ success: true, type: 'address' }} LightningAddressValidationSuccess
+ * @typedef {{ success: false, reason: string }} LightningAddressValidationFailure
+ * @typedef {LightningAddressValidationSuccess | LightningAddressValidationFailure} LightningAddressValidationResult
+ */
 /**
  * Validates Lightning Address format (email: user@domain.tld).
  *

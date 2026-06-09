@@ -1,4 +1,9 @@
 /**
+ * @typedef {{ success: true, type: 'uma' }} UmaAddressValidationSuccess
+ * @typedef {{ success: false, reason: string }} UmaAddressValidationFailure
+ * @typedef {UmaAddressValidationSuccess | UmaAddressValidationFailure} UmaAddressValidationResult
+ */
+/**
  * Validates a Universal Money Address (format: $user@domain.tld).
  *
  * @param {string} address The address to validate.
