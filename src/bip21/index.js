@@ -20,10 +20,10 @@ const MAX_BTC = 21_000_000
 
 /**
  * @typedef {{
- *   address: string   - Validated Bitcoin address
- *   amount?: string   - Decimal BTC amount, up to 8 decimal places (e.g. '0.001')
- *   label?: string    - URL-decoded label
- *   message?: string  - URL-decoded message
+ *   address: string - Validated Bitcoin address
+ *   amount?: string - Decimal BTC amount, up to 8 decimal places (e.g. '0.001')
+ *   label?: string - URL-decoded label
+ *   message?: string - URL-decoded message
  * }} Bip21Request
  */
 

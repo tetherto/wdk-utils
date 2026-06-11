@@ -28,9 +28,9 @@ const EIP681_PREFIX_REGEX = /^[a-z][a-z0-9+.-]*:/i
 
 /**
  * @typedef {{
- *   recipient: string      - EVM address of the transfer recipient
- *   tokenAddress: string   - Token contract address (0x-prefixed hex)
- *   chainId: number        - EVM chain ID
+ *   recipient: string - EVM address of the transfer recipient
+ *   tokenAddress: string - Token contract address (0x-prefixed hex)
+ *   chainId: number - EVM chain ID
  *   amountSmallest: string - Token amount in smallest unit as an integer string (e.g. '1000000' for 1 USDT)
  * }} Eip681TransferRequest
  */
