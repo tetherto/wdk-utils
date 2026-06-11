@@ -15,12 +15,15 @@
 
 import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
 
+const BIP21_SCHEME_REGEX = /^bitcoin:/i
+const MAX_BTC = 21_000_000
+
 /**
  * @typedef {{
- *   address: string
- *   amount?: string
- *   label?: string
- *   message?: string
+ *   address: string   - Validated Bitcoin address
+ *   amount?: string   - Decimal BTC amount, up to 8 decimal places (e.g. '0.001')
+ *   label?: string    - URL-decoded label
+ *   message?: string  - URL-decoded message
  * }} Bip21Request
  */
 
@@ -47,8 +50,14 @@ import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
  * @typedef {Bip21ParseSuccess | Bip21ParseFailure} Bip21ParseResult
  */
 
-const BIP21_SCHEME_REGEX = /^bitcoin:/i
-
+/**
+ * Parses a BIP-21 query string into a key/value map.
+ * Keys and values are percent-decoded. The `+` character is treated as a literal `+`
+ * (BIP-21 is not application/x-www-form-urlencoded).
+ *
+ * @param {string} query - Raw query string (without the leading `?`)
+ * @returns {Record<string, string>}
+ */
 function parseQueryParams (query) {
   const params = {}
   if (!query) return params
@@ -62,8 +71,8 @@ function parseQueryParams (query) {
 
     let key, value
     try {
-      key = decodeURIComponent(rawKey.replace(/\+/g, '%20'))
-      value = decodeURIComponent(rawValue.replace(/\+/g, '%20'))
+      key = decodeURIComponent(rawKey)
+      value = decodeURIComponent(rawValue)
     } catch {
       continue
     }
@@ -76,9 +85,9 @@ function parseQueryParams (query) {
 
 /**
  * Returns true if the input looks like a BIP-21 Bitcoin payment URI.
- * This is syntactic detection only (not a full validity check).
+ * This is a syntactic check only — it does not validate the address or parameters.
  *
- * @param {string} input
+ * @param {string} input - The string to test.
  * @returns {boolean}
  */
 export function isBip21Request (input) {
@@ -86,8 +95,9 @@ export function isBip21Request (input) {
   const trimmed = input.trim()
   if (!trimmed) return false
   if (!BIP21_SCHEME_REGEX.test(trimmed)) return false
-  const afterScheme = trimmed.slice('bitcoin:'.length)
-  return afterScheme.trim().length > 0
+  const afterScheme = trimmed.replace(/^bitcoin:/i, '')
+  const addressPart = afterScheme.split('?')[0]
+  return addressPart.trim().length > 0
 }
 
 /**
@@ -96,7 +106,7 @@ export function isBip21Request (input) {
  * Supports:
  *   bitcoin:<address>[?amount=<btc>][&label=<label>][&message=<message>]
  *
- * @param {string} input
+ * @param {string} input - The BIP-21 URI string to parse.
  * @returns {Bip21ParseResult}
  */
 export function parseBip21Request (input) {
@@ -109,7 +119,7 @@ export function parseBip21Request (input) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
 
-  const withoutScheme = trimmed.slice('bitcoin:'.length)
+  const withoutScheme = trimmed.replace(/^bitcoin:/i, '')
   const queryStart = withoutScheme.indexOf('?')
   const addressRaw = queryStart === -1 ? withoutScheme : withoutScheme.slice(0, queryStart)
   const queryString = queryStart === -1 ? '' : withoutScheme.slice(queryStart + 1)
@@ -131,7 +141,10 @@ export function parseBip21Request (input) {
   }
 
   if (params.amount !== undefined) {
-    if (!/^(0|[1-9]\d*)(\.\d+)?$/.test(params.amount)) {
+    if (!/^(0|[1-9]\d*)(\.\d{1,8})?$/.test(params.amount)) {
+      return { success: false, reason: 'INVALID_AMOUNT' }
+    }
+    if (parseFloat(params.amount) > MAX_BTC) {
       return { success: false, reason: 'INVALID_AMOUNT' }
     }
   }
@@ -143,4 +156,19 @@ export function parseBip21Request (input) {
   if (params.message !== undefined) value.message = params.message
 
   return { success: true, type: 'bip21', value }
+}
+
+/**
+ * Encodes a BIP-21 Bitcoin payment URI from a request object.
+ *
+ * @param {Bip21Request} request - The payment request object to encode.
+ * @returns {string}
+ */
+export function encodeBip21Request (request) {
+  const parts = []
+  if (request.amount !== undefined) parts.push(`amount=${encodeURIComponent(request.amount)}`)
+  if (request.label !== undefined) parts.push(`label=${encodeURIComponent(request.label)}`)
+  if (request.message !== undefined) parts.push(`message=${encodeURIComponent(request.message)}`)
+  const query = parts.length > 0 ? `?${parts.join('&')}` : ''
+  return `bitcoin:${request.address}${query}`
 }

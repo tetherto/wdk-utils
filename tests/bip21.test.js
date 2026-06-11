@@ -1,4 +1,4 @@
-import { isBip21Request, parseBip21Request } from '../src/bip21/index.js'
+import { isBip21Request, parseBip21Request, encodeBip21Request } from '../src/bip21/index.js'
 
 describe('bip21', () => {
   describe('isBip21Request', () => {
@@ -34,6 +34,10 @@ describe('bip21', () => {
 
     it('returns false when only whitespace follows the colon', () => {
       expect(isBip21Request('bitcoin:   ')).toBe(false)
+    })
+
+    it('returns false when address part is missing (only query string present)', () => {
+      expect(isBip21Request('bitcoin:?amount=1')).toBe(false)
     })
   })
 
@@ -108,6 +112,40 @@ describe('bip21', () => {
       })
     })
 
+    it('accepts amount with up to 8 decimal places', () => {
+      expect(parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=0.00000001')).toEqual({
+        success: true,
+        type: 'bip21',
+        value: {
+          address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+          amount: '0.00000001'
+        }
+      })
+    })
+
+    it('returns INVALID_AMOUNT for more than 8 decimal places', () => {
+      expect(
+        parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=0.000000001')
+      ).toEqual({ success: false, reason: 'INVALID_AMOUNT' })
+    })
+
+    it('returns INVALID_AMOUNT when amount exceeds 21 million BTC', () => {
+      expect(
+        parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=21000001')
+      ).toEqual({ success: false, reason: 'INVALID_AMOUNT' })
+    })
+
+    it('accepts amount equal to 21 million BTC', () => {
+      expect(parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=21000000')).toEqual({
+        success: true,
+        type: 'bip21',
+        value: {
+          address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+          amount: '21000000'
+        }
+      })
+    })
+
     it('parses label and message with URL encoding', () => {
       expect(
         parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?label=Alice&message=Invoice%20%23123')
@@ -118,6 +156,19 @@ describe('bip21', () => {
           address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
           label: 'Alice',
           message: 'Invoice #123'
+        }
+      })
+    })
+
+    it('treats + as a literal plus sign, not a space', () => {
+      expect(
+        parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?label=A%2BB')
+      ).toEqual({
+        success: true,
+        type: 'bip21',
+        value: {
+          address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+          label: 'A+B'
         }
       })
     })
@@ -173,6 +224,47 @@ describe('bip21', () => {
       expect(
         parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=0.5&req-expiry=12345')
       ).toEqual({ success: false, reason: 'UNSUPPORTED_REQUIRED_PARAM' })
+    })
+  })
+
+  describe('encodeBip21Request', () => {
+    it('encodes a bare address', () => {
+      expect(encodeBip21Request({ address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH' }))
+        .toBe('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH')
+    })
+
+    it('encodes amount', () => {
+      expect(encodeBip21Request({ address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH', amount: '0.5' }))
+        .toBe('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=0.5')
+    })
+
+    it('encodes label and message with percent-encoding', () => {
+      expect(encodeBip21Request({
+        address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+        label: 'Invoice #123',
+        message: 'Thank you'
+      })).toBe('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?label=Invoice%20%23123&message=Thank%20you')
+    })
+
+    it('encodes all params together', () => {
+      expect(encodeBip21Request({
+        address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+        amount: '0.01',
+        label: 'Coffee',
+        message: 'Thanks'
+      })).toBe('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH?amount=0.01&label=Coffee&message=Thanks')
+    })
+
+    it('round-trips through parseBip21Request', () => {
+      const request = {
+        address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH',
+        amount: '0.001',
+        label: 'Alice',
+        message: 'For coffee'
+      }
+      const encoded = encodeBip21Request(request)
+      const parsed = parseBip21Request(encoded)
+      expect(parsed).toEqual({ success: true, type: 'bip21', value: request })
     })
   })
 })

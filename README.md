@@ -11,7 +11,7 @@ For detailed documentation about the complete WDK ecosystem, visit [docs.wallet.
 ## 🌟 Features
 
 - **Bitcoin Address Validation**: Supports P2PKH, P2SH, and Bech32 address formats.
-- **BIP-21 Payment URI Parsing**: Parses `bitcoin:` payment URIs including optional amount, label, and message parameters.
+- **BIP-21 Payment URI Support**: Parses and encodes `bitcoin:` payment URIs including optional amount, label, and message parameters.
 - **EVM Address Validation**: Validates Ethereum-like addresses, including EIP-55 checksum validation.
 - **EIP-681 Payment Request Parsing**: Parses Ethereum payment request URIs for token transfers.
 - **Lightning Network Validation**: Validates Lightning invoices and Lightning addresses.
@@ -35,6 +35,7 @@ import {
   validateBitcoinAddress,
   isBip21Request,
   parseBip21Request,
+  encodeBip21Request,
   validateEVMAddress,
   isEip681Request,
   parseEip681Request,
@@ -56,6 +57,10 @@ console.log(btcResult) // { success: true, type: 'bech32', network: 'mainnet' }
 const bip21Result = parseBip21Request('bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh?amount=0.001&label=Donation')
 console.log(bip21Result)
 // { success: true, type: 'bip21', value: { address: 'bc1q...', amount: '0.001', label: 'Donation' } }
+
+// BIP-21 Payment URI Encoding
+const bip21Uri = encodeBip21Request({ address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', amount: '0.001', label: 'Donation' })
+console.log(bip21Uri) // 'bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh?amount=0.001&label=Donation'
 
 // EVM Address Validation
 const evmResult = validateEVMAddress('0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe')
@@ -99,6 +104,7 @@ console.log(umaResult) // { success: true, type: 'uma' }
 |---|---|---|
 | `isBip21Request(input)` | `string` | Returns `true` if the input looks like a `bitcoin:` URI (syntactic check only, no validation) |
 | `parseBip21Request(input)` | `string` | Fully parses and validates a BIP-21 URI |
+| `encodeBip21Request(request)` | `Bip21Request` | Encodes a `Bip21Request` object into a `bitcoin:` URI string |
 
 `parseBip21Request` return shape:
 
