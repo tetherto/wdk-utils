@@ -16,6 +16,7 @@
 import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
 
 const BIP21_SCHEME_REGEX = /^bitcoin:/i
+const AMOUNT_REGEX = /^(0|[1-9]\d*)(\.\d{1,8})?$/
 const MAX_BTC = 21_000_000
 
 /**
@@ -95,7 +96,7 @@ export function isBip21Request (input) {
   const trimmed = input.trim()
   if (!trimmed) return false
   if (!BIP21_SCHEME_REGEX.test(trimmed)) return false
-  const afterScheme = trimmed.replace(/^bitcoin:/i, '')
+  const afterScheme = trimmed.replace(BIP21_SCHEME_REGEX, '')
   const addressPart = afterScheme.split('?')[0]
   return addressPart.trim().length > 0
 }
@@ -119,12 +120,12 @@ export function parseBip21Request (input) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
 
-  const withoutScheme = trimmed.replace(/^bitcoin:/i, '')
+  const withoutScheme = trimmed.replace(BIP21_SCHEME_REGEX, '')
   const queryStart = withoutScheme.indexOf('?')
-  const addressRaw = queryStart === -1 ? withoutScheme : withoutScheme.slice(0, queryStart)
+  const addressRaw = (queryStart === -1 ? withoutScheme : withoutScheme.slice(0, queryStart)).trim()
   const queryString = queryStart === -1 ? '' : withoutScheme.slice(queryStart + 1)
 
-  if (!addressRaw || !addressRaw.trim()) {
+  if (!addressRaw) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
 
@@ -141,7 +142,7 @@ export function parseBip21Request (input) {
   }
 
   if (params.amount !== undefined) {
-    if (!/^(0|[1-9]\d*)(\.\d{1,8})?$/.test(params.amount)) {
+    if (!AMOUNT_REGEX.test(params.amount)) {
       return { success: false, reason: 'INVALID_AMOUNT' }
     }
     if (parseFloat(params.amount) > MAX_BTC) {
@@ -165,6 +166,16 @@ export function parseBip21Request (input) {
  * @returns {string}
  */
 export function encodeBip21Request (request) {
+  if (!request || typeof request !== 'object') throw new Error('INVALID_REQUEST')
+
+  const addressValidation = validateBitcoinAddress(request.address)
+  if (!addressValidation.success) throw new Error('INVALID_ADDRESS')
+
+  if (request.amount !== undefined) {
+    if (!AMOUNT_REGEX.test(request.amount)) throw new Error('INVALID_AMOUNT')
+    if (parseFloat(request.amount) > MAX_BTC) throw new Error('INVALID_AMOUNT')
+  }
+
   const parts = []
   if (request.amount !== undefined) parts.push(`amount=${encodeURIComponent(request.amount)}`)
   if (request.label !== undefined) parts.push(`label=${encodeURIComponent(request.label)}`)

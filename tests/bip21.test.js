@@ -266,5 +266,22 @@ describe('bip21', () => {
       const parsed = parseBip21Request(encoded)
       expect(parsed).toEqual({ success: true, type: 'bip21', value: request })
     })
+
+    it('throws INVALID_ADDRESS for a malformed address', () => {
+      expect(() => encodeBip21Request({ address: 'notanaddress' })).toThrow('INVALID_ADDRESS')
+    })
+
+    it('throws INVALID_AMOUNT for more than 8 decimal places', () => {
+      expect(() => encodeBip21Request({ address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH', amount: '0.000000001' })).toThrow('INVALID_AMOUNT')
+    })
+
+    it('throws INVALID_AMOUNT when amount exceeds 21 million BTC', () => {
+      expect(() => encodeBip21Request({ address: '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH', amount: '21000001' })).toThrow('INVALID_AMOUNT')
+    })
+
+    it('throws INVALID_REQUEST for non-object input', () => {
+      expect(() => encodeBip21Request(null)).toThrow('INVALID_REQUEST')
+      expect(() => encodeBip21Request('notanobject')).toThrow('INVALID_REQUEST')
+    })
   })
 })
