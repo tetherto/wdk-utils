@@ -28,10 +28,10 @@ const EIP681_PREFIX_REGEX = /^[a-z][a-z0-9+.-]*:/i
 
 /**
  * @typedef {{
- *   recipient: string
- *   tokenAddress: string
- *   chainId: number
- *   amountSmallest: string
+ *   recipient: string - EVM address of the transfer recipient
+ *   tokenAddress: string - Token contract address (0x-prefixed hex)
+ *   chainId: number - EVM chain ID
+ *   amountSmallest: string - Token amount in smallest unit as an integer string (e.g. '1000000' for 1 USDT)
  * }} Eip681TransferRequest
  */
 
@@ -132,7 +132,7 @@ function getQueryParam (query, keys) {
  * Returns true if the input looks like an EIP-681 style request.
  * This is syntactic detection only (not a full validity check).
  *
- * @param {string} input
+ * @param {string} input - The string to test.
  * @returns {boolean}
  */
 export function isEip681Request (input) {
@@ -154,7 +154,7 @@ export function isEip681Request (input) {
  *   <scheme>:<tokenAddress>@<chainId>/transfer?address=<recipient>&uint256=<amount>
  * and `value` as an alias for `uint256`.
  *
- * @param {string} input
+ * @param {string} input - The EIP-681 URI string to parse.
  * @returns {Eip681ParseResult}
  */
 export function parseEip681Request (input) {

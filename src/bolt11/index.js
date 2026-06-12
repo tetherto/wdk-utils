@@ -23,21 +23,21 @@ import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
 
 /**
 * @typedef {object} Tag
-* @property {string} tagName
-* @property {TagData} data
+* @property {string} tagName - BOLT11 tag name (e.g. 'payment_hash', 'description')
+* @property {TagData} data - Decoded tag value
 */
 
 /**
 * @typedef {object} DecodedLightningInvoice
-* @property {'bitcoin' | 'regtest' | 'testnet' | 'signet'} network
-* @property {string | null} [millisatoshis]
-* @property {number} [timestamp]
-* @property {number} [timeExpireDate]
-* @property {string} [payeeNodeKey]
-* @property {string} [signature]
-* @property {number} [recoveryFlag]
-* @property {Tag[]} tags
-* @property {string} [paymentRequest]
+* @property {'bitcoin' | 'regtest' | 'testnet' | 'signet'} network - Bitcoin network the invoice is for
+* @property {string | null} [millisatoshis] - Invoice amount in millisatoshis
+* @property {number} [timestamp] - Invoice creation time (Unix seconds)
+* @property {number} [timeExpireDate] - Invoice expiry time (Unix seconds)
+* @property {string} [payeeNodeKey] - Payee node public key (hex)
+* @property {string} [signature] - Invoice signature (hex)
+* @property {number} [recoveryFlag] - Signature recovery flag
+* @property {Tag[]} tags - List of tagged fields
+* @property {string} [paymentRequest] - Original encoded payment request string
 */
 
 /**
