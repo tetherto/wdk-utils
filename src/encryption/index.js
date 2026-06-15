@@ -18,37 +18,74 @@ import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto'
 import { Buffer } from 'node:buffer'
 
 /**
+ * @typedef {Object} ScryptParams
+ * @property {number} [N] - scrypt CPU/memory cost parameter (power of 2).
+ * @property {number} [r] - scrypt block size parameter.
+ * @property {number} [p] - scrypt parallelization parameter.
+ */
+
+/**
  * @typedef {Object} EncryptedPayload
  * @property {1} version - The payload format version.
  * @property {string} salt - The scrypt salt (hex).
  * @property {string} iv - The AES-GCM initialization vector (hex).
  * @property {string} tag - The AES-GCM authentication tag (hex).
  * @property {string} ciphertext - The encrypted payload (hex).
+ * @property {number} [scryptN] - scrypt N used for key derivation.
+ * @property {number} [scryptR] - scrypt r used for key derivation.
+ * @property {number} [scryptP] - scrypt p used for key derivation.
  */
 
 const ALGORITHM = 'aes-256-gcm'
-const SCRYPT_N = 2 ** 16
-const SCRYPT_R = 8
-const SCRYPT_P = 1
 const KEY_LEN = 32
 const SALT_LEN = 32
 const IV_LEN = 12
 const SCRYPT_MAX_MEM = 128 * 1024 * 1024
+
+/** @type {Required<ScryptParams>} */
+export const DEFAULT_SCRYPT_PARAMS = {
+  N: 2 ** 16,
+  r: 8,
+  p: 1
+}
+
+/**
+ * @param {ScryptParams | EncryptedPayload} [params]
+ * @returns {Required<ScryptParams>}
+ */
+function resolveScryptParams (params = {}) {
+  return {
+    N: params.N ?? params.scryptN ?? DEFAULT_SCRYPT_PARAMS.N,
+    r: params.r ?? params.scryptR ?? DEFAULT_SCRYPT_PARAMS.r,
+    p: params.p ?? params.scryptP ?? DEFAULT_SCRYPT_PARAMS.p
+  }
+}
+
+/**
+ * @param {Required<ScryptParams>} scryptParams
+ * @returns {number}
+ */
+function scryptMaxMem (scryptParams) {
+  const { N, r, p } = scryptParams
+  return Math.max(SCRYPT_MAX_MEM, 128 * r * (N + p))
+}
 
 /**
  * Derives a 32-byte encryption key from a password and salt using scrypt.
  *
  * @param {string} password - The passphrase.
  * @param {Buffer} salt - The salt buffer.
+ * @param {ScryptParams} [scryptParams] - Optional scrypt cost parameters.
  * @returns {Buffer} The derived key buffer.
  */
-export function deriveKey (password, salt) {
+export function deriveKey (password, salt, scryptParams) {
+  const resolved = resolveScryptParams(scryptParams)
   return Buffer.from(scrypt(password, salt, {
-    N: SCRYPT_N,
-    r: SCRYPT_R,
-    p: SCRYPT_P,
+    N: resolved.N,
+    r: resolved.r,
+    p: resolved.p,
     dkLen: KEY_LEN,
-    maxmem: SCRYPT_MAX_MEM
+    maxmem: scryptMaxMem(resolved)
   }))
 }
 
@@ -57,11 +94,13 @@ export function deriveKey (password, salt) {
  *
  * @param {string} plaintext - The string to encrypt.
  * @param {string} password - The passphrase used to derive the key.
+ * @param {ScryptParams} [scryptParams] - Optional scrypt cost parameters.
  * @returns {EncryptedPayload} The encrypted payload including salt, IV, tag, and ciphertext.
  */
-export function encrypt (plaintext, password) {
+export function encrypt (plaintext, password, scryptParams) {
+  const resolved = resolveScryptParams(scryptParams)
   const salt = randomBytes(SALT_LEN)
-  const key = deriveKey(password, salt)
+  const key = deriveKey(password, salt, resolved)
   const iv = randomBytes(IV_LEN)
 
   try {
@@ -75,7 +114,10 @@ export function encrypt (plaintext, password) {
       salt: salt.toString('hex'),
       iv: iv.toString('hex'),
       tag: tag.toString('hex'),
-      ciphertext
+      ciphertext,
+      scryptN: resolved.N,
+      scryptR: resolved.r,
+      scryptP: resolved.p
     }
   } finally {
     key.fill(0)
@@ -114,7 +156,7 @@ export function decrypt (payload, password) {
     throw new Error(`Unsupported keyring version: ${payload.version}`)
   }
   const salt = Buffer.from(payload.salt, 'hex')
-  const key = deriveKey(password, salt)
+  const key = deriveKey(password, salt, payload)
   try {
     return decryptWithKey(payload, key)
   } finally {

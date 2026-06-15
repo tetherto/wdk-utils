@@ -108,18 +108,22 @@ Resolves a UMA username to its components.
 Strips the "lightning:" prefix from a string.
 - **Returns**: `string`
 
-### `encrypt(plaintext: string, password: string)`
+### `encrypt(plaintext: string, password: string, scryptParams?: ScryptParams)`
 Encrypts a string with AES-256-GCM using a scrypt-derived key.
-- **Returns**: `{ version: 1, salt: string, iv: string, tag: string, ciphertext: string }` (hex-encoded fields)
+- **Returns**: `{ version: 1, salt, iv, tag, ciphertext, scryptN, scryptR, scryptP }` (hex-encoded binary fields)
+- **scryptParams**: Optional `{ N, r, p }`; defaults to `{ N: 65536, r: 8, p: 1 }`
 
 ### `decrypt(payload: EncryptedPayload, password: string)`
-Decrypts an encrypted payload using a passphrase.
+Decrypts an encrypted payload using a passphrase. Reads `scryptN` / `scryptR` / `scryptP` from the payload when present; otherwise uses defaults.
 - **Returns**: `string`
 - **Throws**: If the password is wrong or the payload was tampered with.
 
-### `deriveKey(password: string, salt: Buffer)`
+### `deriveKey(password: string, salt: Buffer, scryptParams?: ScryptParams)`
 Derives a 32-byte AES key from a passphrase and salt using scrypt.
 - **Returns**: `Buffer`
+
+### `DEFAULT_SCRYPT_PARAMS`
+Default scrypt cost parameters: `{ N: 65536, r: 8, p: 1 }`.
 
 ### `decryptWithKey(payload: EncryptedPayload, key: Buffer)`
 Decrypts an encrypted payload using a pre-derived key.
