@@ -1,12 +1,11 @@
 import { jest } from '@jest/globals'
-import * as actualCrypto from 'node:crypto'
+import * as hashUtils from '@noble/hashes/utils.js'
 
 const queued = []
 
-jest.unstable_mockModule('node:crypto', () => ({
-  ...actualCrypto,
-  default: actualCrypto,
-  randomBytes: (n) => (queued.length > 0 ? queued.shift() : actualCrypto.randomBytes(n))
+jest.unstable_mockModule('@noble/hashes/utils.js', () => ({
+  ...hashUtils,
+  randomBytes: (n) => (queued.length > 0 ? queued.shift() : hashUtils.randomBytes(n))
 }))
 
 const { encrypt, decrypt } = await import('../src/encryption/index.js')
@@ -17,8 +16,8 @@ const PHRASE =
 describe('encryption', () => {
   it('encrypts deterministically with pinned salt+iv', () => {
     queued.push(
-      Buffer.from('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff', 'hex'),
-      Buffer.from('aabbccddeeff001122334455', 'hex')
+      hashUtils.hexToBytes('00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff'),
+      hashUtils.hexToBytes('aabbccddeeff001122334455')
     )
 
     const payload = encrypt(PHRASE, 'testpassword123')

@@ -13,9 +13,16 @@
 // limitations under the License.
 'use strict'
 
+import { gcm } from '@noble/ciphers/aes.js'
+import { clean } from '@noble/ciphers/utils.js'
 import { scrypt } from '@noble/hashes/scrypt.js'
-import { randomBytes, createCipheriv, createDecipheriv } from 'node:crypto'
-import { Buffer } from 'node:buffer'
+import {
+  bytesToHex,
+  bytesToUtf8,
+  hexToBytes,
+  randomBytes,
+  utf8ToBytes
+} from '@noble/hashes/utils.js'
 
 /**
  * @typedef {Object} ScryptParams
@@ -36,10 +43,10 @@ import { Buffer } from 'node:buffer'
  * @property {number} [scryptP] - scrypt p used for key derivation.
  */
 
-const ALGORITHM = 'aes-256-gcm'
 const KEY_LEN = 32
 const SALT_LEN = 32
 const IV_LEN = 12
+const GCM_TAG_LEN = 16
 const SCRYPT_MAX_MEM = 128 * 1024 * 1024
 
 /** @type {Required<ScryptParams>} */
@@ -74,19 +81,19 @@ function scryptMaxMem (scryptParams) {
  * Derives a 32-byte encryption key from a password and salt using scrypt.
  *
  * @param {string} password - The passphrase.
- * @param {Buffer} salt - The salt buffer.
+ * @param {Uint8Array} salt - The salt bytes.
  * @param {ScryptParams} [scryptParams] - Optional scrypt cost parameters.
- * @returns {Buffer} The derived key buffer.
+ * @returns {Uint8Array} The derived key bytes.
  */
 export function deriveKey (password, salt, scryptParams) {
   const resolved = resolveScryptParams(scryptParams)
-  return Buffer.from(scrypt(password, salt, {
+  return scrypt(password, salt, {
     N: resolved.N,
     r: resolved.r,
     p: resolved.p,
     dkLen: KEY_LEN,
     maxmem: scryptMaxMem(resolved)
-  }))
+  })
 }
 
 /**
@@ -104,44 +111,43 @@ export function encrypt (plaintext, password, scryptParams) {
   const iv = randomBytes(IV_LEN)
 
   try {
-    const cipher = createCipheriv(ALGORITHM, key, iv)
-    let ciphertext = cipher.update(plaintext, 'utf8', 'hex')
-    ciphertext += cipher.final('hex')
-    const tag = cipher.getAuthTag()
+    const sealed = gcm(key, iv).encrypt(utf8ToBytes(plaintext))
+    const tag = sealed.subarray(sealed.length - GCM_TAG_LEN)
+    const ciphertext = sealed.subarray(0, sealed.length - GCM_TAG_LEN)
 
     return {
       version: 1,
-      salt: salt.toString('hex'),
-      iv: iv.toString('hex'),
-      tag: tag.toString('hex'),
-      ciphertext,
+      salt: bytesToHex(salt),
+      iv: bytesToHex(iv),
+      tag: bytesToHex(tag),
+      ciphertext: bytesToHex(ciphertext),
       scryptN: resolved.N,
       scryptR: resolved.r,
       scryptP: resolved.p
     }
   } finally {
-    key.fill(0)
+    clean(key)
   }
 }
 
 /**
- * Decrypts an encrypted payload using a pre-derived key buffer.
+ * Decrypts an encrypted payload using a pre-derived key.
  *
  * @param {EncryptedPayload} payload - The encrypted payload.
- * @param {Buffer} key - The 32-byte AES key.
+ * @param {Uint8Array} key - The 32-byte AES key.
  * @returns {string} The decrypted plaintext.
  */
 export function decryptWithKey (payload, key) {
   if (payload.version !== 1) {
     throw new Error(`Unsupported keyring version: ${payload.version}`)
   }
-  const iv = Buffer.from(payload.iv, 'hex')
-  const tag = Buffer.from(payload.tag, 'hex')
-  const decipher = createDecipheriv(ALGORITHM, key, iv)
-  decipher.setAuthTag(tag)
-  let plaintext = decipher.update(payload.ciphertext, 'hex', 'utf8')
-  plaintext += decipher.final('utf8')
-  return plaintext
+  const iv = hexToBytes(payload.iv)
+  const tag = hexToBytes(payload.tag)
+  const ciphertext = hexToBytes(payload.ciphertext)
+  const sealed = new Uint8Array(ciphertext.length + tag.length)
+  sealed.set(ciphertext)
+  sealed.set(tag, ciphertext.length)
+  return bytesToUtf8(gcm(key, iv).decrypt(sealed))
 }
 
 /**
@@ -155,11 +161,11 @@ export function decrypt (payload, password) {
   if (payload.version !== 1) {
     throw new Error(`Unsupported keyring version: ${payload.version}`)
   }
-  const salt = Buffer.from(payload.salt, 'hex')
+  const salt = hexToBytes(payload.salt)
   const key = deriveKey(password, salt, payload)
   try {
     return decryptWithKey(payload, key)
   } finally {
-    key.fill(0)
+    clean(key)
   }
 }

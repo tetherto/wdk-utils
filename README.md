@@ -178,14 +178,14 @@ Decrypts an encrypted payload using a passphrase. Reads `scryptN` / `scryptR` / 
 - **Returns**: `string`
 - **Throws**: If the password is wrong or the payload was tampered with.
 
-### `deriveKey(password: string, salt: Buffer, scryptParams?: ScryptParams)`
+### `deriveKey(password: string, salt: Uint8Array, scryptParams?: ScryptParams)`
 Derives a 32-byte AES key from a passphrase and salt using scrypt.
-- **Returns**: `Buffer`
+- **Returns**: `Uint8Array`
 
 ### `DEFAULT_SCRYPT_PARAMS`
 Default scrypt cost parameters: `{ N: 65536, r: 8, p: 1 }`.
 
-### `decryptWithKey(payload: EncryptedPayload, key: Buffer)`
+### `decryptWithKey(payload: EncryptedPayload, key: Uint8Array)`
 Decrypts an encrypted payload using a pre-derived key.
 - **Returns**: `string`
 
