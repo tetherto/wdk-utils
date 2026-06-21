@@ -1,6 +1,6 @@
 # @tetherto/wdk-utils
 
-A collection of utilities for validating cryptocurrency addresses, passphrase-protected seed encryption, and payment URIs. This package provides a set of functions to validate various address formats and parse payment requests from different blockchain networks.
+A collection of utilities for validating cryptocurrency addresses, passphrase-protected seed encryption, HKDF-based key derivation, and payment URIs. This package provides a set of functions to validate various address formats and parse payment requests from different blockchain networks.
 
 ## 🔍 About WDK
 
@@ -18,6 +18,7 @@ For detailed documentation about the complete WDK ecosystem, visit [docs.wallet.
 - **Spark Address Validation**: Supports Spark address formats.
 - **UMA Address Validation**: Validates Universal Money Addresses.
 - **Seed Encryption**: Encrypts and decrypts seed phrases with AES-256-GCM and scrypt key derivation.
+- **Key Derivation**: HKDF-SHA256 seed derivation and deterministic ed25519 keypair generation.
 
 ## ⬇️ Installation
 
@@ -45,7 +46,9 @@ import {
   validateSparkAddress,
   validateUmaAddress,
   encrypt,
-  decrypt
+  decrypt,
+  deriveSeedKey,
+  deriveSeedKeyPair
 } from '@tetherto/wdk-utils';
 ```
 
@@ -87,6 +90,10 @@ console.log(umaResult) // { success: true, type: 'uma' }
 // Seed Encryption
 const payload = encrypt(seedPhrase, passphrase);
 const decrypted = decrypt(payload, passphrase);
+
+// Key Derivation
+const derivedKey = deriveSeedKey(seed, { salt: 'wdk-addressbook-v1', info: 'autobase-encryption' });
+const { publicKey, secretKey } = deriveSeedKeyPair(seed, { salt: 'wdk-addressbook-v1', info: 'bootstrap-writer' });
 
 ```
 
@@ -188,6 +195,16 @@ Default scrypt cost parameters: `{ N: 65536, r: 8, p: 1 }`.
 ### `decryptWithKey(payload: EncryptedPayload, key: Uint8Array)`
 Decrypts an encrypted payload using a pre-derived key.
 - **Returns**: `string`
+
+### `deriveSeedKey(seed: string | Uint8Array, options: SeedKeyOptions)`
+Derives a key from high-entropy input using HKDF-SHA256.
+- **options**: `{ salt, info, length? }` — `salt` and `info` are required domain-separation labels; `length` defaults to `32`.
+- **Returns**: `Uint8Array`
+
+### `deriveSeedKeyPair(seed: string | Uint8Array, options: SeedKeyOptions)`
+Derives a deterministic ed25519 keypair from a seed. Output is byte-compatible with hypercore-crypto's `keyPair(seed)`.
+- **options**: `{ salt, info }` — domain-separation labels (key length is fixed at 32 bytes).
+- **Returns**: `{ publicKey: Uint8Array, secretKey: Uint8Array }` — `publicKey` is 32 bytes; `secretKey` is 64 bytes (`seed32 || publicKey`).
 
 ## 🛠️ Development
 
