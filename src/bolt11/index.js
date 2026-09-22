@@ -19,12 +19,12 @@ import { sha256 } from '@noble/hashes/sha2.js'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
 
-/** @typedef {string | number | Uint8Array} TagData */
+/** @typedef {string | number | Uint8Array | number[]} TagData */
 
 /**
 * @typedef {object} Tag
-* @property {string} tagName - BOLT11 tag name (e.g. 'payment_hash', 'description')
-* @property {TagData} data - Decoded tag value
+* @property {string} tagName - BOLT11 tag name, or 'unknown_<code>' for unrecognized codes
+* @property {TagData} data - Decoded tag value; unknown tags retain raw 5-bit words as number[]
 */
 
 /**
@@ -88,6 +88,7 @@ const TAG_DEFS = [
   { char: 'p', code: 1, name: 'payment_hash', format: 'hex', length: 52 },
   { char: 's', code: 16, name: 'payment_secret', format: 'hex', length: 52 },
   { char: 'd', code: 13, name: 'description', format: 'string' },
+  { char: 'm', code: 27, name: 'metadata', format: 'hex' },
   { char: 'n', code: 19, name: 'payee_node_key', format: 'hex', length: 53 },
   { char: 'h', code: 23, name: 'purpose_commit_hash', format: 'hex', length: 52 },
   { char: 'x', code: 6, name: 'expiry', format: 'number' },
@@ -403,6 +404,8 @@ export function decode (invoice) {
           tagName: tagDef.name,
           data: parser(data, networkInfo)
         })
+      } else {
+        tags.push({ tagName: `unknown_${tagCode}`, data })
       }
 
       index += 3 + length
@@ -527,13 +530,24 @@ function encodeHrp (network, millisatoshis) {
 function encodeTag (tagName, data, networkInfo) {
   try {
     const tagDef = TAG_DEFS.find(t => t.name === tagName)
-    if (!tagDef) throw new Error('UNKNOWN_TAG')
+    let code, words
 
-    const encoder = FORMAT_ENCODERS[tagDef.format] || FORMAT_ENCODERS.raw
-    const words = encoder(data, networkInfo)
-
-    if (tagDef.length && words.length !== tagDef.length) {
-      throw new Error('INVALID_TAG_LENGTH')
+    if (tagDef) {
+      code = tagDef.code
+      const encoder = FORMAT_ENCODERS[tagDef.format] || FORMAT_ENCODERS.raw
+      words = encoder(data, networkInfo)
+      if (tagDef.length && words.length !== tagDef.length) {
+        throw new Error('INVALID_TAG_LENGTH')
+      }
+    } else {
+      const match = /^unknown_([0-9]|[12][0-9]|3[01])$/.exec(tagName)
+      if (!match || TAG_BY_CODE[Number(match[1])]) throw new Error('UNKNOWN_TAG')
+      code = Number(match[1])
+      if (!Array.isArray(data)) throw new Error('INVALID_TAG_DATA')
+      for (const word of data) {
+        if (!Number.isInteger(word) || word < 0 || word > 31) throw new Error('INVALID_TAG_DATA')
+      }
+      words = data
     }
 
     if (words.length >= 1024) {
@@ -541,7 +555,7 @@ function encodeTag (tagName, data, networkInfo) {
     }
 
     const tagWords = new Uint8Array(3 + words.length)
-    tagWords[0] = tagDef.code
+    tagWords[0] = code
     tagWords[1] = words.length >> 5
     tagWords[2] = words.length & 0x1f
     tagWords.set(words, 3)
@@ -599,7 +613,8 @@ function prepareWords (invoiceData) {
 
   if (invoiceData.timeExpireDate && !tags.some(t => t.tagName === 'expiry')) {
     const expiry = Math.max(0, Math.floor(invoiceData.timeExpireDate - Number(timestamp)))
-    tags.push({ tagName: 'expiry', data: expiry })
+    // The implicit default is not a signed field in a decoded invoice.
+    if (expiry !== 3600) tags.push({ tagName: 'expiry', data: expiry })
   }
 
   const tagsWords = []

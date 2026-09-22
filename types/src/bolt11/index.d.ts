@@ -34,14 +34,14 @@ export function sign(invoiceData: DecodedLightningInvoice, privateKey: string | 
  * @returns {LightningInvoiceEncodingResult}
  */
 export function encode(invoiceData: DecodedLightningInvoice): LightningInvoiceEncodingResult;
-export type TagData = string | number | Uint8Array;
+export type TagData = string | number | Uint8Array | number[];
 export type Tag = {
     /**
-     * - BOLT11 tag name (e.g. 'payment_hash', 'description')
+     * - BOLT11 tag name, or 'unknown_<code>' for unrecognized codes
      */
     tagName: string;
     /**
-     * - Decoded tag value
+     * - Decoded tag value; unknown tags retain raw 5-bit words as number[]
      */
     data: TagData;
 };
