@@ -1,3 +1,4 @@
+import { bech32 } from '@scure/base'
 import {
   validateLightningAddress,
   validateLnurl,
@@ -56,6 +57,7 @@ describe('lightning', () => {
   describe('decodeLnurl', () => {
     const specLnurl = 'lnurl1dp68gurn8ghj7ampd3kx2ar0veekzar0wd5xjtnrdakj7tnhv4kxctttdehhwm30d3h82unvwqhkcctwva6kjerv09exjcejxyt4m3me'
     const specUrl = 'https://walletofsatoshi.com/.well-known/lnurlp/languidlyric21'
+    const encodeLnurl = (url) => bech32.encode('lnurl', bech32.toWords(new TextEncoder().encode(url)), 2000).toUpperCase()
 
     it('should decode a valid LNURL from the spec', () => {
       const result = decodeLnurl(specLnurl)
@@ -76,6 +78,27 @@ describe('lightning', () => {
       // Valid bech32 but wrong prefix
       const result = decodeLnurl('abcd1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxy')
       expect(result).toEqual({ success: false, reason: 'INVALID_PREFIX' })
+    })
+
+    it.each([
+      ['an uppercase https URL', 'HTTPS://PAY.EXAMPLE.COM/lnurlp/alice'],
+      ['an http URL of an onion host', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice'],
+      ['an http URL of an onion host with a port', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion:8080/lnurlp/alice'],
+      ['an http URL of an onion host with a trailing dot', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion./lnurlp/alice']
+    ])('should decode %s', (_, url) => {
+      expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: true, type: 'lnurl', data: url })
+    })
+
+    it.each([
+      ['a plain http URL', 'http://pay.example.com/lnurlp/alice'],
+      ['an http URL whose host only contains .onion', 'http://evil.onion.example.com/lnurlp/alice'],
+      ['a link-local address', 'http://169.254.169.254/latest/meta-data/'],
+      ['a loopback address', 'http://127.0.0.1:8545/'],
+      ['a file URL', 'file:///etc/passwd'],
+      ['a javascript URL', 'javascript:alert(1)'],
+      ['a string that is not a URL', 'not a url']
+    ])('should return UNSUPPORTED_URL for %s', (_, url) => {
+      expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: false, reason: 'UNSUPPORTED_URL' })
     })
 
     it('should return INVALID_BECH32_FORMAT for an invalid checksum', () => {

@@ -50,6 +50,61 @@ describe('eip681', () => {
       })
     })
 
+    it.each([
+      ['uint256 with a non-zero value', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&value=1000000000000000000'],
+      ['value with a non-zero uint256', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&value=1000000000000000000&uint256=1'],
+      ['uint256 twice', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&uint256=1000000'],
+      ['uint256 twice, once percent-encoded', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&uint%32%35%36=2'],
+      ['address twice', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&address=0xc2132D05D31c914a87C6611C10748AEb04B58e8F']
+    ])('returns DUPLICATE_PARAM for %s', (_, uri) => {
+      expect(parseEip681Request(uri)).toEqual({ success: false, reason: 'DUPLICATE_PARAM' })
+    })
+
+    it('accepts uint256 together with a zero value', () => {
+      expect(parseEip681Request('ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1000000&value=0')).toEqual({
+        success: true,
+        type: 'eip681-transfer',
+        value: {
+          recipient: '0xA9e338082A061d657014c08e652D96B38639F22a',
+          tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          chainId: 1,
+          amountSmallest: '1000000'
+        }
+      })
+    })
+
+    it('returns INVALID_TOKEN_ADDRESS for a token address with a wrong EIP-55 checksum', () => {
+      expect(
+        parseEip681Request('ethereum:0xdAC17F958D2ee523a2206206994597C13D831eC7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1')
+      ).toEqual({ success: false, reason: 'INVALID_TOKEN_ADDRESS' })
+    })
+
+    it.each([
+      ['the largest uint256', '115792089237316195423570985008687907853269984665640564039457584007913129639935', '115792089237316195423570985008687907853269984665640564039457584007913129639935'],
+      ['zero in scientific notation', '0e99999999', '0']
+    ])('accepts %s as amount', (_, amount, expected) => {
+      expect(parseEip681Request(`ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=${amount}`)).toEqual({
+        success: true,
+        type: 'eip681-transfer',
+        value: {
+          recipient: '0xA9e338082A061d657014c08e652D96B38639F22a',
+          tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          chainId: 1,
+          amountSmallest: expected
+        }
+      })
+    })
+
+    it.each([
+      ['one above uint256', '115792089237316195423570985008687907853269984665640564039457584007913129639936'],
+      ['1e78', '1e78'],
+      ['1.5e78', '1.5e78'],
+      ['1e400', '1e400'],
+      ['1e99999999', '1e99999999']
+    ])('returns INVALID_AMOUNT for %s', (_, amount) => {
+      expect(parseEip681Request(`ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=${amount}`)).toEqual({ success: false, reason: 'INVALID_AMOUNT' })
+    })
+
     it('accepts value as amount alias', () => {
       expect(
         parseEip681Request(

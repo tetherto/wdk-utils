@@ -150,7 +150,8 @@ console.log(recovered === mnemonic); // true
 | `validateAddress(chainId, address)` | CAIP-2 chain id (e.g. `'eip155:1'`) and address string | The chain validator's result (see rows below). For `bip122` and `spark` chain ids the reference also selects the expected network | `{ success: false, reason: string }` — `'NETWORK_MISMATCH'` when a Bitcoin or Spark address belongs to another network or the reference is missing or unknown, `'UNSUPPORTED_CHAIN'` when the chain namespace has no validator, `'INVALID_CHAIN_ID'` for a malformed chain id |
 | `validateBitcoinAddress(address)` | Bitcoin address string | `{ success: true, type: 'p2pkh' \| 'p2sh' \| 'bech32' \| 'bech32m', compatibleNetworks: ('bitcoin' \| 'testnet' \| 'regtest')[] }` — legacy testnet-format addresses list both `'testnet'` and `'regtest'`, since the two networks share Base58 version bytes | `{ success: false, reason: string }` |
 | `validateEVMAddress(address)` | EVM address string | `{ success: true, type: 'evm' }` | `{ success: false, reason: string }` |
-| `validateLightningInvoice(invoice)` | BOLT-11 invoice string | `{ success: true, type: 'invoice' }` | `{ success: false, reason: string }` |
+| `validateLightningInvoice(invoice)` | BOLT-11 invoice string | `{ success: true, type: 'invoice' }` — format check only; read `timeExpireDate` from `decode()` to check expiry | `{ success: false, reason: string }` |
+| `decodeLnurl(lnurl)` | LNURL string (`lnurl1...`, optional `lightning:` prefix) | `{ success: true, type: 'lnurl', data: string }` — only `https:` URLs, plus `http:` for `.onion` hosts (LUD-01) | `{ success: false, reason: string }` — `'UNSUPPORTED_URL'` for any other target |
 | `validateLightningAddress(address)` | Lightning address string | `{ success: true, type: 'address' }` | `{ success: false, reason: string }` |
 | `validateSolanaAddress(address)` | Solana address string | `{ success: true, type: 'solana' }` | `{ success: false, reason: string }` |
 | `validateSparkAddress(address)` | Spark address string | `{ success: true, type: 'spark' \| 'btc', compatibleNetworks: ('mainnet' \| 'testnet' \| 'regtest' \| 'signet' \| 'local')[] }` — L1 deposit addresses for testnet/signet and regtest/local share their Bitcoin formats and list both networks | `{ success: false, reason: string }` |
@@ -184,6 +185,7 @@ console.log(recovered === mnemonic); // true
   | 'INVALID_ADDRESS'             // address fails Bitcoin validation
   | 'INVALID_AMOUNT'              // amount is not a valid decimal BTC value
   | 'UNSUPPORTED_REQUIRED_PARAM'  // unknown req-* parameter present
+  | 'DUPLICATE_PARAM'             // amount, label, message or a req-* key appears more than once
 }
 ```
 
@@ -211,7 +213,9 @@ console.log(recovered === mnemonic); // true
   | 'UNSUPPORTED_METHOD'
   | 'MISSING_REQUIRED_PARAM'
   | 'INVALID_RECIPIENT'
-  | 'INVALID_AMOUNT'
+  | 'INVALID_TOKEN_ADDRESS'       // token address fails EVM validation (incl. EIP-55 checksum)
+  | 'INVALID_AMOUNT'              // not a non-negative integer, or larger than uint256
+  | 'DUPLICATE_PARAM'             // address, uint256 or value given twice, or uint256 together with a non-zero value
 }
 ```
 

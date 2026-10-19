@@ -62,16 +62,36 @@ export function validateLnurl (address) {
 }
 
 /**
+ * Returns whether a decoded LNURL target is allowed: `https:` URLs, or `http:` URLs of `.onion` hosts.
+ *
+ * @see https://github.com/lnurl/luds/blob/luds/01.md
+ * @param {string} url The decoded URL.
+ * @returns {boolean}
+ */
+function isAllowedLnurlTarget (url) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  const hostname = parsed.hostname.replace(/\.$/, '')
+  return parsed.protocol === 'https:' || (parsed.protocol === 'http:' && hostname.endsWith('.onion'))
+}
+
+/**
  * @typedef {{ success: true, type: 'lnurl', data: string }} LnurlDecodingSuccess
- * @typedef {{ success: false, reason: string }} LnurlDecodingFailure
+ * @typedef {{ success: false, reason: 'INVALID_FORMAT' | 'EMPTY_ADDRESS' | 'INVALID_PREFIX' | 'MIXED_CASE' | 'INVALID_BECH32_FORMAT' | 'UNSUPPORTED_URL' }} LnurlDecodingFailure
  * @typedef {LnurlDecodingSuccess | LnurlDecodingFailure} LnurlDecodingResult
  */
 
 /**
  * Decodes an LNURL address into its original URL.
  *
+ * Only `https:` URLs are accepted, plus `http:` URLs of `.onion` hosts, as required by LUD-01.
+ *
  * @param {string} address The LNURL to decode.
- * @returns {LnurlDecodingResult}
+ * @returns {LnurlDecodingResult} The decoded URL, or `UNSUPPORTED_URL` when the target is not an allowed URL.
  */
 export function decodeLnurl (address) {
   if (address == null || typeof address !== 'string') {
@@ -97,6 +117,9 @@ export function decodeLnurl (address) {
     const { words } = bech32.decode(lnurl, false)
     const bytes = bech32.fromWords(words)
     const url = Buffer.from(bytes).toString()
+    if (!isAllowedLnurlTarget(url)) {
+      return { success: false, reason: 'UNSUPPORTED_URL' }
+    }
     return { success: true, type: 'lnurl', data: url }
   } catch (e) {
     if (e && e.message && e.message.toLowerCase().includes('lowercase or uppercase')) {

@@ -50,7 +50,9 @@ const EIP681_PREFIX_REGEX = /^[a-z][a-z0-9+.-]*:/i
  *     | 'UNSUPPORTED_METHOD'
  *     | 'MISSING_REQUIRED_PARAM'
  *     | 'INVALID_RECIPIENT'
+ *     | 'INVALID_TOKEN_ADDRESS'
  *     | 'INVALID_AMOUNT'
+ *     | 'DUPLICATE_PARAM'
  * }} Eip681ParseFailure
  */
 
@@ -66,6 +68,9 @@ function normalizeTokenAddress (value) {
   return tokenAddress
 }
 
+const MAX_UINT256 = 2n ** 256n - 1n
+const MAX_UINT256_DIGITS = MAX_UINT256.toString().length
+
 function scientificToIntegerString (value) {
   const trimmed = value.trim()
   if (!trimmed) return null
@@ -80,10 +85,13 @@ function scientificToIntegerString (value) {
 
   const [whole = '', fraction = ''] = mantissaRaw.split('.')
   const digits = `${whole}${fraction}`.replace(/^0+/, '') || '0'
+  if (digits === '0') return '0'
   const shift = exponent - fraction.length
 
   if (shift >= 0) {
-    return `${digits}${'0'.repeat(shift)}`.replace(/^0+/, '') || '0'
+    if (digits.length + shift > MAX_UINT256_DIGITS) return null
+    const integer = `${digits}${'0'.repeat(shift)}`.replace(/^0+/, '') || '0'
+    return BigInt(integer) > MAX_UINT256 ? null : integer
   }
 
   const decimalIndex = digits.length + shift
@@ -98,8 +106,9 @@ function scientificToIntegerString (value) {
   return integerPart.replace(/^0+/, '') || '0'
 }
 
-function getQueryParam (query, keys) {
-  if (!query) return null
+function getQueryParams (query, keys) {
+  const values = []
+  if (!query) return values
 
   const segments = query.split('&')
   for (const segment of segments) {
@@ -118,13 +127,13 @@ function getQueryParam (query, keys) {
     if (!keys.includes(key)) continue
 
     try {
-      return decodeURIComponent(rawValue)
+      values.push(decodeURIComponent(rawValue))
     } catch {
-      return null
+      values.push(null)
     }
   }
 
-  return null
+  return values
 }
 
 /**
@@ -195,14 +204,27 @@ export function parseEip681Request (input) {
   if (tokenAddress == null) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
+  if (!validateEVMAddress(tokenAddress).success) {
+    return { success: false, reason: 'INVALID_TOKEN_ADDRESS' }
+  }
 
   const chainId = Number.parseInt(chainIdRaw, 10)
   if (!Number.isInteger(chainId) || chainId <= 0) {
     return { success: false, reason: 'INVALID_FORMAT' }
   }
 
-  const recipient = (getQueryParam(query, ['address']) ?? '').trim()
-  const amountRaw = (getQueryParam(query, ['uint256', 'value']) ?? '').trim()
+  const recipients = getQueryParams(query, ['address'])
+  const uint256s = getQueryParams(query, ['uint256'])
+  const values = getQueryParams(query, ['value'])
+  if (recipients.length > 1 || uint256s.length > 1 || values.length > 1) {
+    return { success: false, reason: 'DUPLICATE_PARAM' }
+  }
+  if (uint256s.length === 1 && values.length === 1 && scientificToIntegerString((values[0] ?? '').trim()) !== '0') {
+    return { success: false, reason: 'DUPLICATE_PARAM' }
+  }
+
+  const recipient = (recipients[0] ?? '').trim()
+  const amountRaw = (uint256s[0] ?? values[0] ?? '').trim()
 
   if (!recipient || !amountRaw) {
     return { success: false, reason: 'MISSING_REQUIRED_PARAM' }
