@@ -89,6 +89,9 @@ function isAllowedLnurlTarget (url) {
  * Decodes an LNURL address into its original URL.
  *
  * Only `https:` URLs are accepted, plus `http:` URLs of `.onion` hosts, as required by LUD-01.
+ * The host is not checked, so a URL to a loopback, link-local or private address still decodes. The code
+ * that fetches the URL must block those targets, because a check at decode time cannot see DNS names,
+ * rebinding or redirects.
  *
  * @param {string} address The LNURL to decode.
  * @returns {LnurlDecodingResult} The decoded URL, or `UNSUPPORTED_URL` when the target is not an allowed URL.

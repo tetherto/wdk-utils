@@ -84,7 +84,9 @@ describe('lightning', () => {
       ['an uppercase https URL', 'HTTPS://PAY.EXAMPLE.COM/lnurlp/alice'],
       ['an http URL of an onion host', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice'],
       ['an http URL of an onion host with a port', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion:8080/lnurlp/alice'],
-      ['an http URL of an onion host with a trailing dot', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion./lnurlp/alice']
+      ['an http URL of an onion host with a trailing dot', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion./lnurlp/alice'],
+      ['an https URL of a loopback address, which the decoder does not check', 'https://127.0.0.1:8545/'],
+      ['an https URL of a link-local address, which the decoder does not check', 'https://169.254.169.254/latest/meta-data/']
     ])('should decode %s', (_, url) => {
       expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: true, type: 'lnurl', data: url })
     })
@@ -92,8 +94,6 @@ describe('lightning', () => {
     it.each([
       ['a plain http URL', 'http://pay.example.com/lnurlp/alice'],
       ['an http URL whose host only contains .onion', 'http://evil.onion.example.com/lnurlp/alice'],
-      ['a link-local address', 'http://169.254.169.254/latest/meta-data/'],
-      ['a loopback address', 'http://127.0.0.1:8545/'],
       ['a file URL', 'file:///etc/passwd'],
       ['a javascript URL', 'javascript:alert(1)'],
       ['a string that is not a URL', 'not a url']
