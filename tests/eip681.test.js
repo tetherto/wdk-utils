@@ -53,6 +53,7 @@ describe('eip681', () => {
     it.each([
       ['uint256 with a non-zero value', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&value=1000000000000000000'],
       ['value with a non-zero uint256', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&value=1000000000000000000&uint256=1'],
+      ['uint256 with a value that is not a number', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&value=abc'],
       ['uint256 twice', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&uint256=1000000'],
       ['uint256 twice, once percent-encoded', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&uint%32%35%36=2'],
       ['address twice', 'ethereum:0xdAC17F958D2ee523a2206206994597C13D831ec7@1/transfer?address=0xA9e338082A061d657014c08e652D96B38639F22a&uint256=1&address=0xc2132D05D31c914a87C6611C10748AEb04B58e8F']

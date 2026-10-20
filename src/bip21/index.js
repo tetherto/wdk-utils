@@ -51,12 +51,16 @@ const MAX_BTC = 21_000_000
  * @typedef {Bip21ParseSuccess | Bip21ParseFailure} Bip21ParseResult
  */
 
+const CONSUMED_PARAMS = ['amount', 'label', 'message']
+
 /**
- * @param {string} key
+ * Returns whether the parser reads a query parameter, so a repeat of it is ambiguous.
+ *
+ * @param {string} key - The percent-decoded query key.
  * @returns {boolean} Whether the parser reads this query parameter.
  */
 function isConsumedParam (key) {
-  return key === 'amount' || key === 'label' || key === 'message' || key.startsWith('req-')
+  return CONSUMED_PARAMS.includes(key) || key.startsWith('req-')
 }
 
 /**
@@ -168,9 +172,9 @@ export function parseBip21Request (input) {
 
   /** @type {Bip21Request} */
   const value = { address: addressRaw }
-  if (params.amount !== undefined) value.amount = params.amount
-  if (params.label !== undefined) value.label = params.label
-  if (params.message !== undefined) value.message = params.message
+  for (const key of CONSUMED_PARAMS) {
+    if (params[key] !== undefined) value[key] = params[key]
+  }
 
   return { success: true, type: 'bip21', value }
 }

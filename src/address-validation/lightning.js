@@ -65,8 +65,8 @@ export function validateLnurl (address) {
  * Returns whether a decoded LNURL target is allowed: `https:` URLs, or `http:` URLs of `.onion` hosts.
  *
  * @see https://github.com/lnurl/luds/blob/luds/01.md
- * @param {string} url The decoded URL.
- * @returns {boolean}
+ * @param {string} url - The decoded URL.
+ * @returns {boolean} Whether the URL may be fetched by an LNURL client.
  */
 function isAllowedLnurlTarget (url) {
   let parsed
