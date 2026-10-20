@@ -209,10 +209,10 @@ console.log(recovered === mnemonic); // true
 
 // Failure
 { success: false, reason:
-  | 'INVALID_FORMAT'
-  | 'UNSUPPORTED_METHOD'
-  | 'MISSING_REQUIRED_PARAM'
-  | 'INVALID_RECIPIENT'
+  | 'INVALID_FORMAT'              // not a <scheme>:<token>@<chainId>/<method> URI with a supported scheme
+  | 'UNSUPPORTED_METHOD'          // method is not transfer
+  | 'MISSING_REQUIRED_PARAM'      // address or amount (uint256 / value) missing
+  | 'INVALID_RECIPIENT'           // recipient address fails EVM validation (incl. EIP-55 checksum)
   | 'INVALID_TOKEN_ADDRESS'       // token address fails EVM validation (incl. EIP-55 checksum)
   | 'INVALID_AMOUNT'              // not a non-negative integer, or larger than uint256
   | 'DUPLICATE_PARAM'             // address, uint256 or value given twice, or uint256 together with a non-zero value
