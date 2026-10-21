@@ -202,8 +202,8 @@ console.log(recovered === mnemonic); // true
 ```typescript
 // Success
 { success: true, type: 'eip681-transfer', value: {
-  recipient: string      // checksummed recipient address
-  tokenAddress: string   // checksummed token contract address
+  recipient: string      // recipient address as given, checksum-validated
+  tokenAddress: string   // token contract address as given, checksum-validated
   chainId: number        // EVM chain ID
   amountSmallest: string // token amount in smallest unit (e.g. '1000000' for 1 USDT)
 }}

@@ -19,6 +19,8 @@ describe('lightning', () => {
 
   const ONION_URL = 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice'
 
+  const EXCESS_PADDING_LNURL = 'lnurl1a2626vx'
+
   describe('stripLightningPrefix', () => {
     it('strips lightning: prefix (case-insensitive)', () => {
       expect(stripLightningPrefix('lightning:lnbc1xxx')).toBe('lnbc1xxx')
@@ -51,6 +53,10 @@ describe('lightning', () => {
 
     it.each(UNSUPPORTED_URL_CASES)('returns UNSUPPORTED_URL for an LNURL encoding %s', (_, url) => {
       expect(validateLnurl(encodeLnurl(url))).toEqual({ success: false, reason: 'UNSUPPORTED_URL' })
+    })
+
+    it('returns INVALID_BECH32_FORMAT when the payload is not whole bytes', () => {
+      expect(validateLnurl(EXCESS_PADDING_LNURL)).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' })
     })
 
     it('returns INVALID_PREFIX for a non-lnurl bech32 string', () => {
@@ -117,6 +123,10 @@ describe('lightning', () => {
 
     it.each(UNSUPPORTED_URL_CASES)('should return UNSUPPORTED_URL for %s', (_, url) => {
       expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: false, reason: 'UNSUPPORTED_URL' })
+    })
+
+    it('should return INVALID_BECH32_FORMAT when the payload is not whole bytes', () => {
+      expect(decodeLnurl(EXCESS_PADDING_LNURL)).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' })
     })
 
     it.each([
