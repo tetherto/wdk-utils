@@ -26,16 +26,40 @@ import { stripLightningPrefix } from './utils.js'
 const LIGHTNING_ADDRESS_EMAIL_REGEX = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
 /**
+ * Returns the URL an LNURL client will request, or `null` when the target is not allowed.
+ *
+ * LUD-01 allows `https:` URLs and `http:` URLs of `.onion` hosts. The returned URL is normalized, so
+ * callers see the string that goes on the wire rather than the decoded bytes.
+ *
+ * @see https://github.com/lnurl/luds/blob/luds/01.md
+ * @param {string} url - The decoded URL.
+ * @returns {string | null} The URL an LNURL client will request, or `null` when it may not be fetched.
+ */
+function normalizeLnurlTarget (url) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    return null
+  }
+  const hostname = parsed.hostname.replace(/\.$/, '')
+  const allowed = parsed.protocol === 'https:' || (parsed.protocol === 'http:' && hostname.endsWith('.onion'))
+  return allowed ? parsed.href : null
+}
+
+/**
  * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
- * @typedef {{ success: false, reason: string }} LnurlValidationFailure
+ * @typedef {{ success: false, reason: 'INVALID_FORMAT' | 'EMPTY_ADDRESS' | 'INVALID_PREFIX' | 'MIXED_CASE' | 'INVALID_BECH32_FORMAT' | 'UNSUPPORTED_URL' }} LnurlValidationFailure
  * @typedef {LnurlValidationSuccess | LnurlValidationFailure} LnurlValidationResult
  */
 
 /**
  * Validates an LNURL address (lnurl1... bech32 encoded URL).
  *
- * @param {string} address The LNURL to validate.
- * @returns {LnurlValidationResult}
+ * The encoded URL must pass the same URL rule as `decodeLnurl`. A `lightning:` prefix is not accepted here.
+ *
+ * @param {string} address - The LNURL to validate.
+ * @returns {LnurlValidationResult} The result, with `UNSUPPORTED_URL` when the encoded target is not an allowed URL.
  */
 export function validateLnurl (address) {
   if (address == null || typeof address !== 'string') {
@@ -51,7 +75,11 @@ export function validateLnurl (address) {
   }
 
   try {
-    bech32.decode(lnurl, false)
+    const { words } = bech32.decode(lnurl, false)
+    const url = Buffer.from(bech32.fromWords(words)).toString()
+    if (normalizeLnurlTarget(url) === null) {
+      return { success: false, reason: 'UNSUPPORTED_URL' }
+    }
     return { success: true, type: 'lnurl' }
   } catch (e) {
     if (e && e.message && e.message.toLowerCase().includes('lowercase or uppercase')) {
@@ -59,24 +87,6 @@ export function validateLnurl (address) {
     }
     return { success: false, reason: 'INVALID_BECH32_FORMAT' }
   }
-}
-
-/**
- * Returns whether a decoded LNURL target is allowed: `https:` URLs, or `http:` URLs of `.onion` hosts.
- *
- * @see https://github.com/lnurl/luds/blob/luds/01.md
- * @param {string} url - The decoded URL.
- * @returns {boolean} Whether the URL may be fetched by an LNURL client.
- */
-function isAllowedLnurlTarget (url) {
-  let parsed
-  try {
-    parsed = new URL(url)
-  } catch {
-    return false
-  }
-  const hostname = parsed.hostname.replace(/\.$/, '')
-  return parsed.protocol === 'https:' || (parsed.protocol === 'http:' && hostname.endsWith('.onion'))
 }
 
 /**
@@ -93,8 +103,8 @@ function isAllowedLnurlTarget (url) {
  * that fetches the URL must block those targets, because a check at decode time cannot see DNS names,
  * rebinding or redirects.
  *
- * @param {string} address The LNURL to decode.
- * @returns {LnurlDecodingResult} The decoded URL, or `UNSUPPORTED_URL` when the target is not an allowed URL.
+ * @param {string} address - The LNURL to decode.
+ * @returns {LnurlDecodingResult} The URL an LNURL client will request, or `UNSUPPORTED_URL` when the target is not an allowed URL.
  */
 export function decodeLnurl (address) {
   if (address == null || typeof address !== 'string') {
@@ -119,11 +129,11 @@ export function decodeLnurl (address) {
   try {
     const { words } = bech32.decode(lnurl, false)
     const bytes = bech32.fromWords(words)
-    const url = Buffer.from(bytes).toString()
-    if (!isAllowedLnurlTarget(url)) {
+    const target = normalizeLnurlTarget(Buffer.from(bytes).toString())
+    if (target === null) {
       return { success: false, reason: 'UNSUPPORTED_URL' }
     }
-    return { success: true, type: 'lnurl', data: url }
+    return { success: true, type: 'lnurl', data: target }
   } catch (e) {
     if (e && e.message && e.message.toLowerCase().includes('lowercase or uppercase')) {
       return { success: false, reason: 'MIXED_CASE' }
