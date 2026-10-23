@@ -43,6 +43,7 @@ const MAX_BTC = 21_000_000
  *     | 'INVALID_ADDRESS'
  *     | 'INVALID_AMOUNT'
  *     | 'UNSUPPORTED_REQUIRED_PARAM'
+ *     | 'DUPLICATE_PARAM'
  * }} Bip21ParseFailure
  */
 
@@ -50,16 +51,28 @@ const MAX_BTC = 21_000_000
  * @typedef {Bip21ParseSuccess | Bip21ParseFailure} Bip21ParseResult
  */
 
+const CONSUMED_PARAMS = ['amount', 'label', 'message']
+
+/**
+ * Returns whether the parser reads a query parameter, so a repeat of it is ambiguous.
+ *
+ * @param {string} key - The percent-decoded query key.
+ * @returns {boolean} Whether the parser reads this query parameter.
+ */
+function isConsumedParam (key) {
+  return CONSUMED_PARAMS.includes(key) || key.startsWith('req-')
+}
+
 /**
  * Parses a BIP-21 query string into a key/value map.
  * Keys and values are percent-decoded. The `+` character is treated as a literal `+`
  * (BIP-21 is not application/x-www-form-urlencoded).
  *
  * @param {string} query - Raw query string (without the leading `?`)
- * @returns {Record<string, string>}
+ * @returns {Record<string, string> | null} The parameters, or `null` when a key the parser uses appears more than once.
  */
 function parseQueryParams (query) {
-  const params = {}
+  const params = Object.create(null)
   if (!query) return params
 
   const segments = query.split('&')
@@ -77,6 +90,7 @@ function parseQueryParams (query) {
       continue
     }
 
+    if (key in params && isConsumedParam(key)) return null
     params[key] = value
   }
 
@@ -138,6 +152,9 @@ export function parseBip21Request (input) {
   }
 
   const params = parseQueryParams(queryString)
+  if (params === null) {
+    return { success: false, reason: 'DUPLICATE_PARAM' }
+  }
 
   const requiredParam = Object.keys(params).find(k => k.startsWith('req-'))
   if (requiredParam) {
@@ -155,9 +172,9 @@ export function parseBip21Request (input) {
 
   /** @type {Bip21Request} */
   const value = { address: addressRaw }
-  if (params.amount !== undefined) value.amount = params.amount
-  if (params.label !== undefined) value.label = params.label
-  if (params.message !== undefined) value.message = params.message
+  for (const key of CONSUMED_PARAMS) {
+    if (params[key] !== undefined) value[key] = params[key]
+  }
 
   return { success: true, type: 'bip21', value }
 }

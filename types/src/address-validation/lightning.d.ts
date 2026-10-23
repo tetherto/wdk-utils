@@ -1,25 +1,32 @@
 /**
  * @typedef {{ success: true, type: 'lnurl' }} LnurlValidationSuccess
- * @typedef {{ success: false, reason: string }} LnurlValidationFailure
+ * @typedef {{ success: false, reason: 'INVALID_FORMAT' | 'EMPTY_ADDRESS' | 'INVALID_PREFIX' | 'MIXED_CASE' | 'INVALID_BECH32_FORMAT' | 'UNSUPPORTED_URL' }} LnurlValidationFailure
  * @typedef {LnurlValidationSuccess | LnurlValidationFailure} LnurlValidationResult
  */
 /**
  * Validates an LNURL address (lnurl1... bech32 encoded URL).
  *
- * @param {string} address The LNURL to validate.
- * @returns {LnurlValidationResult}
+ * The encoded URL must pass the same URL rule as `decodeLnurl`. A `lightning:` prefix is not accepted here.
+ *
+ * @param {string} address - The LNURL to validate.
+ * @returns {LnurlValidationResult} The result, with `UNSUPPORTED_URL` when the encoded target is not an allowed URL.
  */
 export function validateLnurl(address: string): LnurlValidationResult;
 /**
  * @typedef {{ success: true, type: 'lnurl', data: string }} LnurlDecodingSuccess
- * @typedef {{ success: false, reason: string }} LnurlDecodingFailure
+ * @typedef {{ success: false, reason: 'INVALID_FORMAT' | 'EMPTY_ADDRESS' | 'INVALID_PREFIX' | 'MIXED_CASE' | 'INVALID_BECH32_FORMAT' | 'UNSUPPORTED_URL' }} LnurlDecodingFailure
  * @typedef {LnurlDecodingSuccess | LnurlDecodingFailure} LnurlDecodingResult
  */
 /**
  * Decodes an LNURL address into its original URL.
  *
- * @param {string} address The LNURL to decode.
- * @returns {LnurlDecodingResult}
+ * Only `https:` URLs are accepted, plus `http:` URLs of `.onion` hosts, as required by LUD-01.
+ * The host is not checked, so a URL to a loopback, link-local or private address still decodes. The code
+ * that fetches the URL must block those targets, because a check at decode time cannot see DNS names,
+ * rebinding or redirects.
+ *
+ * @param {string} address - The LNURL to decode.
+ * @returns {LnurlDecodingResult} The URL an LNURL client will request, or `UNSUPPORTED_URL` when the target is not an allowed URL.
  */
 export function decodeLnurl(address: string): LnurlDecodingResult;
 /**
@@ -40,7 +47,7 @@ export type LnurlValidationSuccess = {
 };
 export type LnurlValidationFailure = {
     success: false;
-    reason: string;
+    reason: "INVALID_FORMAT" | "EMPTY_ADDRESS" | "INVALID_PREFIX" | "MIXED_CASE" | "INVALID_BECH32_FORMAT" | "UNSUPPORTED_URL";
 };
 export type LnurlValidationResult = LnurlValidationSuccess | LnurlValidationFailure;
 export type LnurlDecodingSuccess = {
@@ -50,7 +57,7 @@ export type LnurlDecodingSuccess = {
 };
 export type LnurlDecodingFailure = {
     success: false;
-    reason: string;
+    reason: "INVALID_FORMAT" | "EMPTY_ADDRESS" | "INVALID_PREFIX" | "MIXED_CASE" | "INVALID_BECH32_FORMAT" | "UNSUPPORTED_URL";
 };
 export type LnurlDecodingResult = LnurlDecodingSuccess | LnurlDecodingFailure;
 export type LightningAddressValidationSuccess = {

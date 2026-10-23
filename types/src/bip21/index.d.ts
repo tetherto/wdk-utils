@@ -48,6 +48,6 @@ export type Bip21ParseSuccess = {
 };
 export type Bip21ParseFailure = {
     success: false;
-    reason: "INVALID_FORMAT" | "INVALID_ADDRESS" | "INVALID_AMOUNT" | "UNSUPPORTED_REQUIRED_PARAM";
+    reason: "INVALID_FORMAT" | "INVALID_ADDRESS" | "INVALID_AMOUNT" | "UNSUPPORTED_REQUIRED_PARAM" | "DUPLICATE_PARAM";
 };
 export type Bip21ParseResult = Bip21ParseSuccess | Bip21ParseFailure;
