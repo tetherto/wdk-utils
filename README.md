@@ -35,7 +35,7 @@ npm install @tetherto/wdk-utils
 
 ### React Native
 
-`encrypt()` needs a cryptographically secure random source (`crypto.getRandomValues`, used internally by `@noble/ciphers`). React Native's Hermes engine doesn't provide this by default, so RN apps need a polyfill:
+`encrypt()` and `splitMnemonic()` need a cryptographically secure random source (`crypto.getRandomValues`, used internally by `@noble/ciphers` and `shamir-secret-sharing`). React Native's Hermes engine doesn't provide this by default, so RN apps need a polyfill:
 
 ```bash
 npm install react-native-get-random-values
@@ -48,7 +48,7 @@ Import it once, as the **first import** in your app's entry point — before any
 import 'react-native-get-random-values';
 ```
 
-Without it, `encrypt()` throws with a message pointing back to this section rather than failing silently or with an opaque error.
+Without it, `encrypt()` throws with a message pointing back to this section, and `splitMnemonic()` rejects with `ReferenceError: crypto is not defined`. `decrypt()` and `combineMnemonic()` don't need a random source.
 
 ## 🚀 Quick Start
 
