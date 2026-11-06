@@ -41,6 +41,6 @@ export type Eip681ParseSuccess = {
 };
 export type Eip681ParseFailure = {
     success: false;
-    reason: "INVALID_FORMAT" | "UNSUPPORTED_METHOD" | "MISSING_REQUIRED_PARAM" | "INVALID_RECIPIENT" | "INVALID_AMOUNT";
+    reason: "INVALID_FORMAT" | "UNSUPPORTED_METHOD" | "MISSING_REQUIRED_PARAM" | "INVALID_RECIPIENT" | "INVALID_TOKEN_ADDRESS" | "INVALID_AMOUNT" | "DUPLICATE_PARAM";
 };
 export type Eip681ParseResult = Eip681ParseSuccess | Eip681ParseFailure;

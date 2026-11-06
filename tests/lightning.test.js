@@ -1,3 +1,4 @@
+import { bech32 } from '@scure/base'
 import {
   validateLightningAddress,
   validateLnurl,
@@ -6,6 +7,20 @@ import {
 import { stripLightningPrefix } from '../src/address-validation/utils.js'
 
 describe('lightning', () => {
+  const encodeLnurl = (url) => bech32.encode('lnurl', bech32.toWords(new TextEncoder().encode(url)), 2000).toUpperCase()
+
+  const UNSUPPORTED_URL_CASES = [
+    ['a plain http URL', 'http://pay.example.com/lnurlp/alice'],
+    ['an http URL whose host only contains .onion', 'http://evil.onion.example.com/lnurlp/alice'],
+    ['a file URL', 'file:///etc/passwd'],
+    ['a javascript URL', 'javascript:alert(1)'],
+    ['a string that is not a URL', 'not a url']
+  ]
+
+  const ONION_URL = 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice'
+
+  const EXCESS_PADDING_LNURL = 'lnurl1a2626vx'
+
   describe('stripLightningPrefix', () => {
     it('strips lightning: prefix (case-insensitive)', () => {
       expect(stripLightningPrefix('lightning:lnbc1xxx')).toBe('lnbc1xxx')
@@ -30,6 +45,18 @@ describe('lightning', () => {
     it('returns success for a valid LNURL', () => {
       expect(validateLnurl(validLnurl)).toEqual({ success: true, type: 'lnurl' })
       expect(validateLnurl(validLnurl.toUpperCase())).toEqual({ success: true, type: 'lnurl' })
+    })
+
+    it('returns success for an LNURL encoding an http URL of an onion host', () => {
+      expect(validateLnurl(encodeLnurl(ONION_URL))).toEqual({ success: true, type: 'lnurl' })
+    })
+
+    it.each(UNSUPPORTED_URL_CASES)('returns UNSUPPORTED_URL for an LNURL encoding %s', (_, url) => {
+      expect(validateLnurl(encodeLnurl(url))).toEqual({ success: false, reason: 'UNSUPPORTED_URL' })
+    })
+
+    it('returns INVALID_BECH32_FORMAT when the payload is not whole bytes', () => {
+      expect(validateLnurl(EXCESS_PADDING_LNURL)).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' })
     })
 
     it('returns INVALID_PREFIX for a non-lnurl bech32 string', () => {
@@ -76,6 +103,43 @@ describe('lightning', () => {
       // Valid bech32 but wrong prefix
       const result = decodeLnurl('abcd1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxy')
       expect(result).toEqual({ success: false, reason: 'INVALID_PREFIX' })
+    })
+
+    it.each([
+      ['an uppercase https URL', 'HTTPS://PAY.EXAMPLE.COM/lnurlp/alice', 'https://pay.example.com/lnurlp/alice'],
+      ['a URL with no path', 'https://pay.example.com', 'https://pay.example.com/'],
+      ['a URL with a relative path segment', 'https://pay.example.com/../lnurlp/alice', 'https://pay.example.com/lnurlp/alice'],
+      ['a URL with the default port', 'https://pay.example.com:443/lnurlp/alice', 'https://pay.example.com/lnurlp/alice'],
+      ['a URL with a unicode host', 'https://\u043f\u0440\u0438\u043c\u0435\u0440.\u0440\u0444/lnurlp/alice', 'https://xn--e1afmkfd.xn--p1ai/lnurlp/alice'],
+      ['a URL with a fragment', 'https://pay.example.com/lnurlp/alice#frag', 'https://pay.example.com/lnurlp/alice#frag'],
+      ['an http URL of an onion host', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion/lnurlp/alice'],
+      ['an http URL of an onion host with a port', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion:8080/lnurlp/alice', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion:8080/lnurlp/alice'],
+      ['an http URL of an onion host with a trailing dot', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion./lnurlp/alice', 'http://pay3xample5onion2addr6ssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.onion./lnurlp/alice'],
+      ['an https URL of a loopback address, which the decoder does not check', 'https://127.0.0.1:8545/', 'https://127.0.0.1:8545/'],
+      ['an https URL of a link-local address, which the decoder does not check', 'https://169.254.169.254/latest/meta-data/', 'https://169.254.169.254/latest/meta-data/']
+    ])('should decode %s', (_, url, expected) => {
+      expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: true, type: 'lnurl', data: expected })
+    })
+
+    it.each(UNSUPPORTED_URL_CASES)('should return UNSUPPORTED_URL for %s', (_, url) => {
+      expect(decodeLnurl(encodeLnurl(url))).toEqual({ success: false, reason: 'UNSUPPORTED_URL' })
+    })
+
+    it('should return INVALID_BECH32_FORMAT when the payload is not whole bytes', () => {
+      expect(decodeLnurl(EXCESS_PADDING_LNURL)).toEqual({ success: false, reason: 'INVALID_BECH32_FORMAT' })
+    })
+
+    it.each([
+      ['an onion URL', ONION_URL],
+      ['an https URL', 'https://pay.example.com/lnurlp/alice'],
+      ...UNSUPPORTED_URL_CASES.map(([label, url]) => [label, url])
+    ])('should agree with validateLnurl on %s', (_, url) => {
+      const lnurl = encodeLnurl(url)
+      const validation = validateLnurl(lnurl)
+      const decoding = decodeLnurl(lnurl)
+
+      expect(validation.success).toBe(decoding.success)
+      expect(validation.reason).toBe(decoding.reason)
     })
 
     it('should return INVALID_BECH32_FORMAT for an invalid checksum', () => {

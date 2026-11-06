@@ -42,6 +42,23 @@ describe('bip21', () => {
   })
 
   describe('parseBip21Request', () => {
+    it.each([
+      ['amount twice', 'amount=0.001&amount=100'],
+      ['label twice', 'label=a&amount=1&label=b'],
+      ['a req- parameter twice', 'req-x=1&req-x=2']
+    ])('returns DUPLICATE_PARAM for %s', (_, query) => {
+      expect(parseBip21Request(`bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?${query}`))
+        .toEqual({ success: false, reason: 'DUPLICATE_PARAM' })
+    })
+
+    it.each([
+      ['an ignored parameter given twice', 'lightning=a&lightning=b&amount=0.5'],
+      ['keys named after object prototype members', 'constructor=x&__proto__=y&amount=0.5']
+    ])('parses a URI with %s', (_, query) => {
+      expect(parseBip21Request(`bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?${query}`))
+        .toEqual({ success: true, type: 'bip21', value: { address: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', amount: '0.5' } })
+    })
+
     it('parses a bare P2PKH address URI', () => {
       expect(parseBip21Request('bitcoin:1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH')).toEqual({
         success: true,
