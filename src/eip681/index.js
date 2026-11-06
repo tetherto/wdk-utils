@@ -103,6 +103,7 @@ function scientificToIntegerString (value) {
   const fractionalPart = digits.slice(decimalIndex)
   if (!/^0*$/.test(fractionalPart)) return null
 
+  if (BigInt(integerPart) > MAX_UINT256) return null
   return integerPart.replace(/^0+/, '') || '0'
 }
 
