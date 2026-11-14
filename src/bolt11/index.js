@@ -71,11 +71,13 @@ import { validateBitcoinAddress } from '../address-validation/bitcoin.js'
 */
 
 const base58check = createBase58check(sha256)
+// BOLT #11 prefixes. A prefix that extends another one ('lnbcrt' / 'lnbc', 'lntbs' / 'lntb')
+// must come first, since the HRP is matched with startsWith.
 const VALID_PREFIXES = [
   { network: 'regtest', prefix: 'lnbcrt', bech32: 'bcrt', p2pkh: 0x6f, p2sh: 0xc4 },
   { network: 'bitcoin', prefix: 'lnbc', bech32: 'bc', p2pkh: 0x00, p2sh: 0x05 },
-  { network: 'testnet', prefix: 'lntb', bech32: 'tb', p2pkh: 0x6f, p2sh: 0xc4 },
-  { network: 'signet', prefix: 'lnsb', bech32: 'tb', p2pkh: 0x6f, p2sh: 0xc4 }
+  { network: 'signet', prefix: 'lntbs', bech32: 'tb', p2pkh: 0x6f, p2sh: 0xc4 },
+  { network: 'testnet', prefix: 'lntb', bech32: 'tb', p2pkh: 0x6f, p2sh: 0xc4 }
 ]
 const MULTIPLIER = {
   m: 1_000n,

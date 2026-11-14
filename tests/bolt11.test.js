@@ -421,6 +421,47 @@ describe('BOLT11 Tests', () => {
       expect(result.reason).toContain('FALLBACK_ADDRESS_NETWORK_MISMATCH')
     })
 
+    it('should decode a signet invoice (lntbs prefix)', () => {
+      const signet = { bech32: 'tbs', pubKeyHash: 0x6f, scriptHash: 0xc4, validWitnessVersions: [0, 1] }
+      const unsigned = bolt11.encode({
+        network: signet,
+        millisatoshis: '250000',
+        timestamp: 1700000000,
+        tags: [
+          { tagName: 'payment_hash', data: '00'.repeat(32) },
+          { tagName: 'description', data: 'signet' }
+        ]
+      }, false)
+      const invoice = bolt11.sign(unsigned, Buffer.from(MOCK_PRIVATE_KEY).toString('hex')).paymentRequest
+
+      expect(invoice.startsWith('lntbs2500n1')).toBe(true)
+
+      const result = decode(invoice)
+      expect(result.success).toBe(true)
+      expect(result.data.network).toBe('signet')
+      expect(result.data.millisatoshis).toBe('250000')
+      expect(result.data.payeeNodeKey).toBe(MOCK_PUB_KEY_HEX)
+    })
+
+    it('should encode a signet invoice with the lntbs prefix', () => {
+      const signed = sign({
+        network: 'signet',
+        millisatoshis: '250000',
+        timestamp: 1700000000,
+        tags: [
+          { tagName: 'payment_hash', data: '00'.repeat(32) },
+          { tagName: 'description', data: 'signet' }
+        ]
+      }, MOCK_PRIVATE_KEY)
+      expect(signed.success).toBe(true)
+
+      const encoded = encode(signed.data)
+      expect(encoded.success).toBe(true)
+      expect(encoded.data.startsWith('lntbs2500n1')).toBe(true)
+      expect(bolt11.decode(encoded.data, { bech32: 'tbs', pubKeyHash: 0x6f, scriptHash: 0xc4, validWitnessVersions: [0, 1] }).millisatoshis).toBe('250000')
+      expect(decode(encoded.data).data.network).toBe('signet')
+    })
+
     it('should support uppercase invoices', () => {
       const invoice = MOCK_SUCCESS_DATA[0].invoice.toUpperCase()
       const result = decode(invoice)
