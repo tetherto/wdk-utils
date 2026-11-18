@@ -116,6 +116,12 @@ describe('validateAddress', () => {
     expect(result).toEqual({ success: true, type: 'p2sh', compatibleNetworks: ['testnet', 'regtest'] })
   })
 
+  it('accepts a native segwit (bech32) regtest address for the Bitcoin regtest chain id', () => {
+    const result = validateAddress('bip122:0f9188f13cb7b2c71f2a335e3a4fc328', 'bcrt1qquv9lg5g2r4jkr0ahun0ddfg5xntxjelwjpnuw')
+
+    expect(result).toEqual({ success: true, type: 'bech32', compatibleNetworks: ['regtest'] })
+  })
+
   it('rejects a bech32 testnet address for the Bitcoin regtest chain id', () => {
     const result = validateAddress('bip122:0f9188f13cb7b2c71f2a335e3a4fc328', 'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx')
 

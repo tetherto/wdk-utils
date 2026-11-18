@@ -20,7 +20,9 @@ describe('bitcoin', () => {
     p2sh: '2N2vcTKT3jLuqypx4JAceGZBVrU5k6eXckm',
     bech32: 'tb1qu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acqcl92j4', // SegWit v0
     bech32m: 'tb1pu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acqjg9r2f', // Taproot (SegWit v1)
-    regtest: 'bcrt1pu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acql309ln' // Regtest Bech32m
+    regtest: 'bcrt1pu9yqnhc6wjj6s62s9x0shnl5l2r7gq5cudm94r7mvwv0uw4s7acql309ln', // Regtest Bech32m
+    regtestP2wpkh: 'bcrt1qquv9lg5g2r4jkr0ahun0ddfg5xntxjelwjpnuw', // Regtest SegWit v0 (P2WPKH)
+    regtestP2wsh: 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85' // Regtest SegWit v0 (P2WSH)
   }
 
   const successCases = [
@@ -32,7 +34,9 @@ describe('bitcoin', () => {
     { address: testnet.p2sh, expected: { success: true, type: 'p2sh', compatibleNetworks: ['testnet', 'regtest'] } },
     { address: testnet.bech32, expected: { success: true, type: 'bech32', compatibleNetworks: ['testnet'] } },
     { address: testnet.bech32m, expected: { success: true, type: 'bech32m', compatibleNetworks: ['testnet'] } },
-    { address: testnet.regtest, expected: { success: true, type: 'bech32m', compatibleNetworks: ['regtest'] } }
+    { address: testnet.regtest, expected: { success: true, type: 'bech32m', compatibleNetworks: ['regtest'] } },
+    { address: testnet.regtestP2wpkh, expected: { success: true, type: 'bech32', compatibleNetworks: ['regtest'] } },
+    { address: testnet.regtestP2wsh, expected: { success: true, type: 'bech32', compatibleNetworks: ['regtest'] } }
   ]
 
   // --- Test the main address validator ---
@@ -87,6 +91,12 @@ describe('bitcoin', () => {
         expect(validateBitcoinAddress(bad)).toEqual({ success: false, reason: 'INVALID_WITNESS_VERSION' })
       })
 
+      it('returns INVALID_WITNESS_VERSION for a witness version above 16', () => {
+        // BIP-350 invalid test vector: witness version 17
+        const bad = 'BC130XLXVLHEMJA6C4DQV22UAPCTQUPFHLXM9H8Z3K2E72Q4K9HCZ7VQ7ZWS8R'
+        expect(validateBitcoinAddress(bad)).toEqual({ success: false, reason: 'INVALID_WITNESS_VERSION' })
+      })
+
       it('returns INVALID_WITNESS_VERSION for bech32m-encoded v0 witness', () => {
         // v0 program encoded with bech32m instead of bech32
         const bad = 'bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty'
@@ -114,6 +124,8 @@ describe('bitcoin', () => {
     it('succeeds for valid Bech32 (v0) addresses', () => {
       expect(validateBech32(mainnet.bech32)).toEqual(successCases[2].expected)
       expect(validateBech32(testnet.bech32)).toEqual(successCases[6].expected)
+      expect(validateBech32(testnet.regtestP2wpkh)).toEqual(successCases[9].expected)
+      expect(validateBech32(testnet.regtestP2wsh)).toEqual(successCases[10].expected)
     })
 
     it('fails for other address types', () => {

@@ -48,6 +48,9 @@ const NETWORKS = {
 
 const WITNESS_VERSION_BECH32 = 0
 
+// BIP-173 / BIP-350: segwit addresses carry a witness version between 0 and 16.
+const MAX_WITNESS_VERSION = 16
+
 /**
  * Decodes a Base58Check address and validates its payload length.
  * Returns decoded bytes or a failure result.
@@ -153,7 +156,7 @@ export function validateBech32 (address) {
     const prefix = address.toLowerCase().substring(0, address.lastIndexOf('1'))
     if (prefix === NETWORKS.bitcoin.bech32) return { success: true, type: 'bech32', compatibleNetworks: ['bitcoin'] }
     if (prefix === NETWORKS.testnet.bech32) return { success: true, type: 'bech32', compatibleNetworks: ['testnet'] }
-    // Note: Regtest addresses are Bech32m, not Bech32. This validator will correctly fail them.
+    if (prefix === NETWORKS.regtest.bech32) return { success: true, type: 'bech32', compatibleNetworks: ['regtest'] }
 
     return { success: false, reason: 'INVALID_HRP' }
   } catch (e) {
@@ -174,7 +177,7 @@ export function validateBech32m (address) {
     const decoded = bech32m.decode(address)
     const { words } = decoded
 
-    if (words[0] === WITNESS_VERSION_BECH32) {
+    if (words[0] === WITNESS_VERSION_BECH32 || words[0] > MAX_WITNESS_VERSION) {
       return { success: false, reason: 'INVALID_WITNESS_VERSION' }
     }
 
